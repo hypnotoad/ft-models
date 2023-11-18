@@ -1,0 +1,13 @@
+[app]
+name: Plotter
+category: Spaß
+author: Ralf Dragon
+icon: icon.png
+desc: Plotter
+url: https://github.com/hypnotoad
+html: index.html
+exec: main.py
+managed: yes
+uuid: 155710e1-be0b-4eaf-a1ed-6f50bf199a68
+version: 1.0
+firmware: 1.0.2
