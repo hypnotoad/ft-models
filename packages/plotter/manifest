@@ -1,10 +1,10 @@
 [app]
 name: Plotter
-category: Spaß
+category: Modelle
 author: Ralf Dragon
 icon: icon.png
 desc: Plotter
-url: https://github.com/hypnotoad
+url: https://github.com/hypnotoad/ft-models.git
 html: index.html
 exec: main.py
 managed: yes
