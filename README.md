@@ -8,4 +8,6 @@ For my models, I publish
 - a zip package with the app for the [community firmware](https://cfw.ftcommunity.de/ftcommunity-TXT/de/)
 
 
+To use this repository in the community firmware app store, add a
+repository with name and user hypnotoad and repository ft-models.
 
