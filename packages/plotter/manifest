@@ -10,4 +10,4 @@ exec: main.py
 managed: yes
 uuid: 155710e1-be0b-4eaf-a1ed-6f50bf199a68
 version: 1.0
-firmware: 1.0.2
+firmware: >=1.0.2
