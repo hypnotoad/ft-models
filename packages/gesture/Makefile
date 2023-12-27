@@ -1,4 +1,4 @@
-../gesture.zip: gestensensor.py manifest
+../gesture.zip: gestensensor.py main.py manifest sensor.png
 	zip -u -r $@ $^ 
 
 clean:
