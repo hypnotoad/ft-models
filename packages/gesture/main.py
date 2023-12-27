@@ -15,7 +15,7 @@ class FtcGuiApplication(TouchApplication):
         self.red = self.sensor.crgbToHsv([1, 1, 0, 0])
         self.blue = self.sensor.crgbToHsv([1, 0, 0, 1])
         self.green = self.sensor.crgbToHsv([1, 0, 1, 0])
-        print("red: %s, blue: %s, green: %s" % (self.red, self.blue, self.green))
+        #print("red: %s, blue: %s, green: %s" % (self.red, self.blue, self.green))
 
         vbox = QVBoxLayout()
 
@@ -59,7 +59,7 @@ class FtcGuiApplication(TouchApplication):
         self.pr.setValue(round(r*100))
         self.pb.setValue(round(b*100))
         self.pg.setValue(round(g*100))
-        print("crgb: %s hsv: %s" % (crgb, hsv))
+        #print("crgb: %s hsv: %s" % (crgb, hsv))
 
 
 if __name__ == "__main__":

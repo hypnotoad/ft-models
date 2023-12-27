@@ -9,15 +9,7 @@ class Gestensensor:
         self.bus = smbus.SMBus(bus_id)
         self.address = address
 
-        #0x80 Aktivierungsregister, Sensor einschalten, Funktionen aktivieren
         self.bus.write_byte_data(self.address, 0x80, 0x07)
-
-        #0x8F Steuerregister 1 Funktionsparameter des ICs einstellen.
-        #0/1 Verst????rkung Farb- und Lichtsensor (00=1x, 01=4x, 10=16x, 11=64x)
-        #2/3 Verst????rkung Ann????herungssensor (00=1x, 01=2x, 10=4x, 11=8x)
-        #4/5 reserviert
-        #6/7 Stromst????rke LED (00=100mA, 01=50mA, 10=25mA, 11=12,5mA)
-
         self.bus.write_byte_data(self.address, 0x8f, 0x0f)
 
 
