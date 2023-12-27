@@ -51,12 +51,11 @@ class Gestensensor:
         assert(h2 <= 1)
         assert(h1 >= 0)
         assert(h2 >= 0)
-        
-        if h1 < h2:
-            h1 += 1
-        return h1 - h2
-        
-        
+
+        d = abs(h1-h2)
+        if d > 0.5:
+            d = 1-d
+        return d*2
 
 
 if __name__ == '__main__':
