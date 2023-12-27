@@ -1,6 +1,19 @@
 ; list of packages
 ; this file contains all manifests
 
+[gesture]
+name: Gestensensor
+category: Modelle
+author: Ralf Dragon
+icon: sensor.png
+desc: Gestensensor-UI
+url: https://github.com/hypnotoad/ft-models.git
+exec: main.py
+managed: yes
+uuid: 53167040-fd44-468e-aedc-5fb862315340
+version: 1.0
+firmware: >=1.0.2
+
 [plotter]
 name: Plotter
 category: Modelle
