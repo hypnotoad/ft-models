@@ -14,6 +14,19 @@ uuid: 53167040-fd44-468e-aedc-5fb862315340
 version: 1.0
 firmware: >=1.0.2
 
+[lidar]
+name: Lidar
+category: Modelle
+author: Ralf Dragon
+icon: sensor.png
+desc: Lidar-UI
+url: https://github.com/hypnotoad/ft-models.git
+exec: main.py
+managed: yes
+uuid: bdf10bb8-5d97-41a0-a887-213d6d4c053c
+version: 1.0
+firmware: >=1.0.2
+
 [plotter]
 name: Plotter
 category: Modelle
