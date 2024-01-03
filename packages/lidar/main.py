@@ -28,7 +28,7 @@ class FtcGuiApplication(TouchApplication):
         self.pr.setMaximum(500)
         vbox.addWidget(self.pr)
 
-        self.w = TouchWindow("Gesture Sensor")
+        self.w = TouchWindow("Lidar Sensor")
         self.w.centralWidget.setLayout(vbox)
         self.w.show()
 
