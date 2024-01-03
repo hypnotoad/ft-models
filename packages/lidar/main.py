@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
+
 import sys
-import gestensensor
+import VL53L0X
 from TouchStyle import *
 
 
@@ -11,33 +12,22 @@ class FtcGuiApplication(TouchApplication):
     def __init__(self, args):
         TouchApplication.__init__(self, args)
 
-        self.sensor = gestensensor.Gestensensor(1)
-        self.red = self.sensor.crgbToHsv([1, 1, 0, 0])
-        self.blue = self.sensor.crgbToHsv([1, 0, 0, 1])
-        self.green = self.sensor.crgbToHsv([1, 0, 1, 0])
-        #print("red: %s, blue: %s, green: %s" % (self.red, self.blue, self.green))
+        self.sensor = VL53L0X.VL53L0X(i2c_bus=1,i2c_address=0x29)
+        self.sensor.open()
+        self.sensor.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
+
+        timing = self.sensor.get_timing()
+        if timing < 20000:
+            timing = 20000
+        print("Timing %d ms" % (timing/1000))
 
         vbox = QVBoxLayout()
 
-        self.hsv = QLabel()
-        self.hsv.setText("Hue Similarities")
-        vbox.addWidget(self.hsv)
-
         self.pr = QProgressBar()
-        self.pr.setFormat("%v")
-        self.pr.setStyleSheet("background-color:red;")
+        self.pr.setFormat("%v mm")
+        self.pr.setMaximum(500)
         vbox.addWidget(self.pr)
 
-        self.pb = QProgressBar()
-        self.pb.setFormat("%v")
-        self.pb.setStyleSheet("background-color:blue;")
-        vbox.addWidget(self.pb)
-
-        self.pg = QProgressBar()
-        self.pg.setFormat("%v")
-        self.pg.setStyleSheet("background-color:green;")
-        vbox.addWidget(self.pg)
-        
         self.w = TouchWindow("Gesture Sensor")
         self.w.centralWidget.setLayout(vbox)
         self.w.show()
@@ -50,18 +40,17 @@ class FtcGuiApplication(TouchApplication):
         self.exec()
 
     def updateColor(self):
-        crgb = self.sensor.crgb()
-        hsv = self.sensor.crgbToHsv(crgb)
-        r = 1-self.sensor.hueDiff(hsv, self.red)
-        b = 1-self.sensor.hueDiff(hsv, self.blue)
-        g = 1-self.sensor.hueDiff(hsv, self.green)
+        mm = self.sensor.get_distance()
         
-        self.pr.setValue(round(r*100))
-        self.pb.setValue(round(b*100))
-        self.pg.setValue(round(g*100))
-        #print("crgb: %s hsv: %s" % (crgb, hsv))
+        self.pr.setValue(round(mm))
+        print("mm: %s" % mm)
+        
+    def stop(self):
+        self.sensor.tof.stop_ranging()
+        self.sensor.tof.close()
 
 
 if __name__ == "__main__":
 
-    FtcGuiApplication(sys.argv)
+    f = FtcGuiApplication(sys.argv)
+    f.stop()
