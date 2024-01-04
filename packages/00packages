@@ -1,6 +1,19 @@
 ; list of packages
 ; this file contains all manifests
 
+[accel]
+name: Accelerometer
+category: Modelle
+author: Ralf Dragon
+icon: sensor.png
+desc: Accelerometer-UI
+url: https://github.com/hypnotoad/ft-models.git
+exec: main.py
+managed: yes
+uuid: a0000c76-e58e-4be8-8435-0074a13992f1
+version: 1.0
+firmware: >=1.0.2
+
 [gesture]
 name: Gestensensor
 category: Modelle
