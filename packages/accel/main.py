@@ -6,43 +6,35 @@ import sys
 import ADXL345
 from TouchStyle import *
 
-class FloatBar(QtGui.QProgressBar):
-    def __init__(self,args):
-        super(qProress, self).__init__(args)
+class FloatBar(QProgressBar):
+    def __init__(self, minimum, maximum):
+        super(FloatBar, self).__init__()
         #self.valueChanged.connect(self.onValueChanged)
-        self.maximum = 1.0
+        self.minimum = minimum
+        self.range = maximum - minimum
 
-    def setMaximum(self, value):
-        self.maximum = value
-        
     #def onValueChanged(self, value):
     #    self.setFormat('%.02f%%' % (self.prefixFloat))
 
     def setValue(self, value):
-        QtGui.QProgressBar.setValue(self, int(100*value/self.maximum))
+        QProgressBar.setValue(self, int(100*(value-self.minimum)/self.range))
         
 class FtcGuiApplication(TouchApplication):
 
     def __init__(self, args):
         TouchApplication.__init__(self, args)
 
-        self.sensor = ADXL345()
+        self.sensor = ADXL345.ADXL345()
 
         vbox = QVBoxLayout()
 
-        self.x = FloatBar()
-        #self.x.setFormat("%.3f g")
-        self.x.setMaximum(10)
+        self.x = FloatBar(-10, 10)
         vbox.addWidget(self.x)
 
-        self.y = FloatBar()
-        #self.y.setFormat("%.3f g")
-        self.y.setMaximum(10)
+        self.y = FloatBar(-10, 10)
         vbox.addWidget(self.y)
 
-        self.z = FloatBar()
-        #self.z.setFormat("%.3f g")
-        self.z.setMaximum(10)
+        self.z = FloatBar(-10, 10)
         vbox.addWidget(self.z)
         
         self.w = TouchWindow("Lidar Sensor")
@@ -57,7 +49,7 @@ class FtcGuiApplication(TouchApplication):
         self.exec()
 
     def update(self):
-        axes = accelerometer.get_all_axes()
+        axes = self.sensor.get_all_axes()
         self.x.setValue(axes['x'])
         self.y.setValue(axes['y'])
         self.z.setValue(axes['z'])
