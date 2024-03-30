@@ -3,7 +3,7 @@ import cv2
 import os
         
 class Tracer:
-    def __init__(self, grayscale, thr1 = 100, thr2 = 200):
+    def __init__(self, grayscale, thr1 = 50, thr2 = 200):
         self.thr1 = thr1
         self.thr2 = thr2
         self.img = grayscale
@@ -12,17 +12,22 @@ class Tracer:
         edges = cv2.Canny(self.img, self.thr1, self.thr2)
         contours, hierarchy = cv2.findContours(edges, cv2.RETR_LIST,
                                    cv2.CHAIN_APPROX_TC89_L1)
+
+        # returned data should be a list of lists
+        contours = [[(coord[0][0], coord[0][1]) for coord in contour] for contour in contours]
+            
         return contours, edges
 
     def draw_contours(self, contours, img):
         cv2.drawContours(img, contours, -1, (0, 0, 0), 1)
 
-    def plt_commands(self, contours, max_height = 2000, max_width = 2000, border = 200):
+    def plt_commands(self, contours, max_height = 3500, max_width = 4000, border = 200):
         # Returns an output compatible to plt_reader.plt_commands
         scale = min([max_width / self.img.shape[1], max_height / self.img.shape[0]])
         def transform(coord):
-            x=coord[0] * scale - border - max_width
-            y=coord[1] * scale + border
+            # x should be mirrored as we transform from ij to xy coordinates
+            x=(self.img.shape[1]-coord[0]) * scale - border - max_width
+            y=                   coord[1]  * scale + border
             return [x, y]
         cmds=[]
         cmds.append(["PI", lambda p: p.init()])
@@ -31,7 +36,7 @@ class Tracer:
             first = True
             for coord in contour:
                 #print(coord)
-                [x, y] = transform(coord[0])
+                [x, y] = transform(coord)
                 if first:
                     cmds.append(["PA (%d, %d)" % (x, y), lambda p, x=x, y=y: p.go(round(x), round(y))])
                     cmds.append(["PD", lambda p: p.pen(False)])
@@ -42,7 +47,27 @@ class Tracer:
             
         return cmds
 
+def point_dist(a, b):
+    return max(abs(a[0]-b[0]), abs(a[1]-b[1]))
 
+def contour_dist(contour, pos):
+    return min(point_dist(contour[ 0], pos),
+               point_dist(contour[-1], pos))
+
+def optimize_order(contours):
+    retval = []
+    current_position = (0, 0)
+    while contours:
+        contours.sort(key=lambda contour: contour_dist(contour, current_position))
+        next_contour = contours[0]
+        if point_dist(next_contour[0], current_position) > point_dist(next_contour[-1], current_position):
+            print("Reversing")
+            next_contour.reverse()
+        retval.append(next_contour)
+        contours.pop(0)
+        current_position = next_contour[-1]
+        
+    return retval
         
 if __name__ == "__main__":
     print("Opencv version: {}".format(cv2.__version__))
@@ -96,11 +121,14 @@ if __name__ == "__main__":
 
         plt.show()
 
-    if sum_length < 5000:
-        cmds = t.plt_commands(contours)
-    else:
-        print("Plotting long contours")
-        cmds = t.plt_commands(longcontours)
+    if sum_length > 5000:
+        print("Plotting long contours only")
+        contours = longcontours
+        
+    # optimize order of contours
+    contours = optimize_order(contours)
+        
+    cmds = t.plt_commands(contours)
 
     if os.path.isfile('/etc/fw-ver.txt'):
         import plotter
