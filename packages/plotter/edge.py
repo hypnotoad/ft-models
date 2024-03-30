@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
-
+import os
+        
 class Tracer:
     def __init__(self, grayscale, thr1 = 100, thr2 = 200):
         self.thr1 = thr1
@@ -25,11 +26,11 @@ class Tracer:
             return [x, y]
         cmds=[]
         cmds.append(["PI", lambda p: p.init()])
-        print(contours)
+        #print(contours)
         for contour in contours:
             first = True
             for coord in contour:
-                print(coord)
+                #print(coord)
                 [x, y] = transform(coord[0])
                 if first:
                     cmds.append(["PA (%d, %d)" % (x, y), lambda p, x=x, y=y: p.go(round(x), round(y))])
@@ -67,7 +68,7 @@ if __name__ == "__main__":
     t.draw_contours(contours, cimg)
     t.draw_contours(longcontours, cimg2)
 
-    if False:
+    if True:
         from matplotlib import pyplot as plt
         plt.subplot(221)
         plt.imshow(img,cmap = 'gray')
@@ -88,4 +89,16 @@ if __name__ == "__main__":
         plt.show()
 
     cmds = t.plt_commands(contours)
-    print([cmd[0] for cmd in cmds])
+    #print([cmd[0] for cmd in cmds])
+
+    if os.path.isfile('/etc/fw-ver.txt'):
+        import plotter
+
+        plotter = plotter.Plotter('localhost', True)
+    else:
+        import dummy_plotter
+        plotter = dummy_plotter.Plotter()
+        
+    tasks = [lambda cmd=cmd: (cmd[1])(plotter) for cmd in cmds]
+    for task in tasks:
+        task()

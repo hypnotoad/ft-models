@@ -12,5 +12,5 @@ submodules:
 	git submodule update
 
 install:
-	rsync -av *.py *.html data thirdparty txt3:apps/155710e1-be0b-4eaf-a1ed-6f50bf199a68
+	rsync -av *.py *.html *.jpg data thirdparty txt3:apps/155710e1-be0b-4eaf-a1ed-6f50bf199a68
 
