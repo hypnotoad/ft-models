@@ -47,8 +47,15 @@ class Tracer:
 if __name__ == "__main__":
     print("Opencv version: {}".format(cv.__version__))
     
-    img = cv.imread('face.jpg', cv.IMREAD_GRAYSCALE)
+    img = cv.imread('tree.jpg', cv.IMREAD_GRAYSCALE)
     assert img is not None
+
+    max_area = 540*360
+    area = img.shape[0]*img.shape[1]
+    if area > max_area:
+        scale = max_area / area
+        print("Scaling down to {}%".format(scale*100))
+        img = cv.resize(img, None, fx=scale, fy=scale)
 
     t = Tracer(img)
 
@@ -63,13 +70,14 @@ if __name__ == "__main__":
     print("{} contours are longer than the mean {}".
           format(len(longcontours), mean_length))
 
-    cimg  = np.full(img.shape, 255, dtype=img.dtype)
-    cimg2 = np.full(img.shape, 255, dtype=img.dtype)
-    t.draw_contours(contours, cimg)
-    t.draw_contours(longcontours, cimg2)
-
-    if True:
+    if False:
         from matplotlib import pyplot as plt
+
+        cimg  = np.full(img.shape, 255, dtype=img.dtype)
+        cimg2 = np.full(img.shape, 255, dtype=img.dtype)
+        t.draw_contours(contours, cimg)
+        t.draw_contours(longcontours, cimg2)
+
         plt.subplot(221)
         plt.imshow(img,cmap = 'gray')
         plt.title('Original Image'), plt.xticks([]), plt.yticks([])
@@ -89,7 +97,6 @@ if __name__ == "__main__":
         plt.show()
 
     cmds = t.plt_commands(contours)
-    #print([cmd[0] for cmd in cmds])
 
     if os.path.isfile('/etc/fw-ver.txt'):
         import plotter
