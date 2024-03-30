@@ -1,5 +1,5 @@
-import numpy as np
-import cv2 as cv
+import numpy
+import cv2
 import os
         
 class Tracer:
@@ -9,13 +9,13 @@ class Tracer:
         self.img = grayscale
 
     def extract_contours(self):
-        edges = cv.Canny(self.img, self.thr1, self.thr2)
-        contours, hierarchy = cv.findContours(edges, cv.RETR_LIST,
-                                   cv.CHAIN_APPROX_TC89_L1)
+        edges = cv2.Canny(self.img, self.thr1, self.thr2)
+        contours, hierarchy = cv2.findContours(edges, cv2.RETR_LIST,
+                                   cv2.CHAIN_APPROX_TC89_L1)
         return contours, edges
 
     def draw_contours(self, contours, img):
-        cv.drawContours(img, contours, -1, (0, 0, 0), 1)
+        cv2.drawContours(img, contours, -1, (0, 0, 0), 1)
 
     def plt_commands(self, contours, max_height = 2000, max_width = 2000, border = 200):
         # Returns an output compatible to plt_reader.plt_commands
@@ -45,17 +45,17 @@ class Tracer:
 
         
 if __name__ == "__main__":
-    print("Opencv version: {}".format(cv.__version__))
+    print("Opencv version: {}".format(cv2.__version__))
     
-    img = cv.imread('tree.jpg', cv.IMREAD_GRAYSCALE)
+    img = cv2.imread('tree.jpg', cv2.IMREAD_GRAYSCALE)
     assert img is not None
 
     max_area = 540*360
     area = img.shape[0]*img.shape[1]
     if area > max_area:
-        scale = max_area / area
+        scale = numpy.sqrt(max_area / area)
         print("Scaling down to {}%".format(scale*100))
-        img = cv.resize(img, None, fx=scale, fy=scale)
+        img = cv2.resize(img, None, fx=scale, fy=scale)
 
     t = Tracer(img)
 
@@ -73,8 +73,8 @@ if __name__ == "__main__":
     if False:
         from matplotlib import pyplot as plt
 
-        cimg  = np.full(img.shape, 255, dtype=img.dtype)
-        cimg2 = np.full(img.shape, 255, dtype=img.dtype)
+        cimg  = numpy.full(img.shape, 255, dtype=img.dtype)
+        cimg2 = numpy.full(img.shape, 255, dtype=img.dtype)
         t.draw_contours(contours, cimg)
         t.draw_contours(longcontours, cimg2)
 
