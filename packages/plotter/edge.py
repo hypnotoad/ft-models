@@ -55,7 +55,7 @@ if __name__ == "__main__":
     if area > max_area:
         scale = numpy.sqrt(max_area / area)
         print("Scaling down to {}%".format(scale*100))
-        img = cv2.resize(img, None, fx=scale, fy=scale)
+        img = cv2.resize(img, None, fx=scale, fy=scale, interpolation = cv2.INTER_AREA)
 
     t = Tracer(img)
 
@@ -88,15 +88,19 @@ if __name__ == "__main__":
 
         plt.subplot(223)
         plt.imshow(cimg,cmap = 'gray')
-        plt.title('Contour Image'), plt.xticks([]), plt.yticks([])
+        plt.title('All Contours'), plt.xticks([]), plt.yticks([])
 
         plt.subplot(224)
         plt.imshow(cimg2,cmap = 'gray')
-        plt.title('Contour Image'), plt.xticks([]), plt.yticks([])
+        plt.title('Long Contours'), plt.xticks([]), plt.yticks([])
 
         plt.show()
 
-    cmds = t.plt_commands(contours)
+    if sum_length < 5000:
+        cmds = t.plt_commands(contours)
+    else:
+        print("Plotting long contours")
+        cmds = t.plt_commands(longcontours)
 
     if os.path.isfile('/etc/fw-ver.txt'):
         import plotter
