@@ -15,6 +15,10 @@ def parse_coords(str):
   return retval
   
 def plt_commands(filename, max_height = 2000, max_width = 2000, border = 200, multiplier = 1.0):
+  # the returned commands can be executed by a plotter like:
+  # tasks = [lambda cmd=cmd: (cmd[1])(plotter) for cmd in cmds]
+  # for task in tasks: task()
+
   cmds = []
   data = []
   xvals = []

@@ -5,7 +5,6 @@ import sys
 import plotter
 from TouchStyle import *
 import os
-import plotter
 import math
 import upload
 
