@@ -9,7 +9,9 @@ class Tracer:
         self.img = grayscale
 
     def extract_contours(self):
-        edges = cv2.Canny(self.img, self.thr1, self.thr2)
+        # Devernay subpixel would be nice but no implementation available
+        edges = cv2.Canny(self.img, threshold1 = self.thr1, threshold2 = self.thr2,
+                          L2gradient = True)
         contours, hierarchy = cv2.findContours(edges, cv2.RETR_LIST,
                                    cv2.CHAIN_APPROX_TC89_L1)
 
@@ -19,7 +21,9 @@ class Tracer:
         return contours, edges
 
     def draw_contours(self, contours, img):
-        cv2.drawContours(img, contours, -1, (0, 0, 0), 1)
+        drawcontours = [numpy.array([(coord[0], coord[1]) for coord in contour], dtype=numpy.int32)
+                        for contour in contours]
+        cv2.drawContours(img, drawcontours, -1, (0, 0, 0), 1)
 
     def plt_commands(self, contours, max_height = 3500, max_width = 4000, border = 200):
         # Returns an output compatible to plt_reader.plt_commands
@@ -61,7 +65,6 @@ def optimize_order(contours):
         contours.sort(key=lambda contour: contour_dist(contour, current_position))
         next_contour = contours[0]
         if point_dist(next_contour[0], current_position) > point_dist(next_contour[-1], current_position):
-            print("Reversing")
             next_contour.reverse()
         retval.append(next_contour)
         contours.pop(0)
@@ -121,6 +124,8 @@ if __name__ == "__main__":
 
         plt.show()
 
+    # todo: uniform sampling within contours
+    
     if sum_length > 5000:
         print("Plotting long contours only")
         contours = longcontours
