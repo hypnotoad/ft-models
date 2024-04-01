@@ -42,7 +42,7 @@ class FtcGuiApplication(TouchApplication):
 
     def launch_thread(self, tasks):
         print("Launching thread with %d tasks" % len(tasks))
-        # self.thread and self.worker are cleaned up by QT. That means
+        # self.plotter_thread and self.worker are cleaned up by QT. That means
         # that we must never call launch_thread if a thread is still
         # running.
         if self.is_running:
@@ -50,18 +50,22 @@ class FtcGuiApplication(TouchApplication):
             return
         self.is_running = True
         
-        self.thread = QThread()
+        self.plotter_thread = QThread()
         self.worker = Worker()
         self.worker.set_tasks(tasks)
-        self.worker.moveToThread(self.thread)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.started.connect(lambda: self.on_running(True))
-        self.thread.started.connect(self.worker.run)
-        self.thread.finished.connect(lambda: self.on_running(False))
-        self.thread.finished.connect(self.thread.deleteLater)
+        self.worker.moveToThread(self.plotter_thread)
+        
         self.worker.progress.connect(self.on_progress)
-        self.thread.start()
+        self.worker.finished.connect(self.plotter_thread.quit)
+        self.plotter_thread.started.connect(lambda: self.on_running(True))
+        self.plotter_thread.started.connect(self.worker.run)
+        self.plotter_thread.finished.connect(lambda: self.on_running(False))
+        self.plotter_thread.finished.connect(self.worker.deleteLater)
+        self.plotter_thread.finished.connect(self.plotter_thread.deleteLater)
+        self.plotter_thread.finished.connect(lambda: print("plotter thread finished"))
+
+        self.plotter_thread.start()
+        print("plotter thread started")
 
 
     def on_running(self, running):
@@ -104,8 +108,9 @@ class FtcGuiApplication(TouchApplication):
         self.cmds = []
         self.plotter = None
         self.is_running = False
+        self.init_plotter()
 
-        self.launch_thread([self.init_plotter])
+        self.launch_thread([self.plotter.init])
 
         # create the empty main window
         w = TouchWindow("Plotter")
@@ -163,7 +168,7 @@ class FtcGuiApplication(TouchApplication):
 
     def init_plotter(self):
         if os.path.isfile('/etc/fw-ver.txt'):
-            self.plotter = plotter.Plotter('localhost', True)
+            self.plotter = plotter.Plotter('localhost', init=False)
         else:
             import dummy_plotter
             self.plotter = dummy_plotter.Plotter()
@@ -260,6 +265,7 @@ class FtcGuiApplication(TouchApplication):
         self.loader_thread.finished.connect(lambda: print("loader thread finished"))
 
         self.loader_thread.start()
+        print("loader thread started")
 
 
     def on_update_cmds(self, cmds):
@@ -281,7 +287,7 @@ class FtcGuiApplication(TouchApplication):
     def on_startstop(self):
         if self.is_running:
             print("Stop")
-            self.thread.requestInterruption()
+            self.plotter_thread.requestInterruption()
         else:
             print("Start")
             tasks = [lambda cmd=cmd: (cmd[1])(self.plotter) for cmd in self.cmds]
