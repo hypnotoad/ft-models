@@ -7,7 +7,6 @@ from TouchStyle import *
 from PyQt5 import QtGui
 import os
 import math
-import upload
 
 
 def is_image(filename):
@@ -151,11 +150,14 @@ class FtcGuiApplication(TouchApplication):
         w.show()
         self.w=w
 
-        self.webserver = QThread()
-        upload.worker.moveToThread(self.webserver)
-        self.webserver.started.connect(upload.worker.run) 
-        upload.worker.file_available.connect(self.on_file_uploaded)
-        self.webserver.start()
+        if True:
+            import upload
+
+            self.webserver = QThread()
+            upload.worker.moveToThread(self.webserver)
+            self.webserver.started.connect(upload.worker.run) 
+            upload.worker.file_available.connect(self.on_file_uploaded)
+            self.webserver.start()
 
         self.exec()
 
