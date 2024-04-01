@@ -71,11 +71,9 @@ def optimize_order(contours):
         current_position = next_contour[-1]
         
     return retval
-        
-if __name__ == "__main__":
-    print("Opencv version: {}".format(cv2.__version__))
-    
-    img = cv2.imread('tree.jpg', cv2.IMREAD_GRAYSCALE)
+
+def extract_contours(filename):
+    img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
     assert img is not None
 
     max_area = 540*360
@@ -133,10 +131,18 @@ if __name__ == "__main__":
     # optimize order of contours
     contours = optimize_order(contours)
 
+    return contours, t
+
+
+if __name__ == "__main__":
+    print("Opencv version: {}".format(cv2.__version__))
+
+    contours, tracer = extract_contours('data/tree.jpg')
+
     height=3500
     width=4000
     border=200
-    cmds = t.plt_commands(contours, height, width, border)
+    cmds = tracer.plt_commands(contours, height, width, border)
 
     if os.path.isfile('/etc/fw-ver.txt'):
         import plotter
