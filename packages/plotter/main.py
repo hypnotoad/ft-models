@@ -10,6 +10,13 @@ import math
 import upload
 
 
+def is_image(filename):
+    return filename.endswith(".jpg")
+
+def is_drawing(filename):
+    return filename.endswith(".plt") or filename.endswith(".hpgl")
+
+
 class Worker(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(int)
@@ -67,10 +74,14 @@ class FtcGuiApplication(TouchApplication):
     def update_preview(self):
         import preview_plotter
 
+        # images are mirrored compared to hpgl coordinates (legacy definition)
+        flip_x = is_drawing(self.filename.text())
+        flip_y = is_drawing(self.filename.text())
+        
         plotter = preview_plotter.Plotter(width = self.max_width+2*self.border,
                                           height = self.max_height+2*self.border,
-                                          flip_x = True,
-                                          flip_y = True)
+                                          flip_x = flip_x,
+                                          flip_y = flip_y)
         for cmd in self.cmds:
             (cmd[1])(plotter)
         s = self.preview.size()
@@ -162,13 +173,14 @@ class FtcGuiApplication(TouchApplication):
         hp_mm_s = 25/1000
         ft_mm_s = self.mm_max_width / self.max_width
         return hp_mm_s / ft_mm_s
-        
+
     def on_file_uploaded(self, filename):
         print("file %s is available" % filename)
-        self.filename.setText("<upload>")
 
-        self.load_hpgl(filename)
-        self.loader.finished.connect(lambda x, filename=filename: os.remove(filename))
+        if is_drawing(filename) or is_image(filename):
+            self.filename.setText("<upload>")
+            self.load_image(filename)
+            self.loader.finished.connect(lambda x, filename=filename: os.remove(filename))
 
         
     def on_select(self):
@@ -177,7 +189,7 @@ class FtcGuiApplication(TouchApplication):
 
         qlist = QListWidget()
         for file in os.listdir(self.datadir):
-            if file.endswith(".plt") or file.endswith(".hpgl"):
+            if is_drawing(file) or is_image(file):
                 qlist.addItem(file)
         qlist.sortItems(Qt.AscendingOrder)
         
@@ -197,15 +209,18 @@ class FtcGuiApplication(TouchApplication):
 
         if qlist.selectedItems():
             fn = qlist.selectedItems()[0].text()
-            self.filename.setText(fn)
-            self.load_hpgl(self.datadir + fn)
-        else:
-            self.filename.setText("")
+            if is_drawing(fn) or is_image(fn):
+                self.filename.setText(fn)
+                self.load_image(self.datadir + fn)
+                return
+
+        # failure
+        self.filename.setText("")
 
 
-    def load_hpgl(self, filename):
+    def load_image(self, filename):
 
-        self.popup = BusyAnimation(parent=self.w, timeout_s=20)
+        self.popup = BusyAnimation(parent=self.w, timeout_s=30)
         self.popup.show()
 
         class Task(QObject):
@@ -216,10 +231,19 @@ class FtcGuiApplication(TouchApplication):
                 self.max_width=w
                 self.ratio=r
             def run(self):
-                cmds = plotter.plt_commands(filename,
-                                            max_height=self.max_height,
-                                            max_width=self.max_width,
-                                            multiplier=self.ratio)
+                if is_image(filename):
+                    import edge
+                    contours, tracer = edge.extract_contours(filename)
+                        
+                    cmds = tracer.plt_commands(contours,
+                                                max_height=self.max_height,
+                                                max_width=self.max_width,
+                                                border=200)
+                else:
+                    cmds = plotter.plt_commands(filename,
+                                                max_height=self.max_height,
+                                                max_width=self.max_width,
+                                                multiplier=self.ratio)
                 self.finished.emit(cmds)
 
         self.loader_thread = QThread()
