@@ -3,15 +3,25 @@ import math
 class Plotter:
 
   def __init__(self):
+    self.distance = None
+    self.pen_movements = None
+    self.lines = None
+    self.position = None
     self.init()
 
   def __del__(self):
+    self.print_stats()
+
+  def print_stats(self):
     print("Distance: {}, Segments: {}, Updowns: {}".format(self.distance, self.lines, self.pen_movements))
 
   def pen(self, up):
     self.pen_movements += 1
     
   def init(self):
+    if self.distance:
+        self.print_stats()
+
     self.distance = 0
     self.pen_movements = 0
     self.lines = 0
