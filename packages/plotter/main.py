@@ -4,6 +4,7 @@
 import sys
 import plotter
 from TouchStyle import *
+from PyQt5 import QtGui
 import os
 import math
 import upload
@@ -63,12 +64,29 @@ class FtcGuiApplication(TouchApplication):
         self.is_running = running
         self.update_buttons()
 
+    def update_preview(self):
+        import preview_plotter
+
+        plotter = preview_plotter.Plotter(width = self.max_width+2*self.border,
+                                          height = self.max_height+2*self.border,
+                                          flip_x = True,
+                                          flip_y = True)
+        for cmd in self.cmds:
+            (cmd[1])(plotter)
+        s = self.preview.size()
+        qimg = plotter.get_qt_preview(s.width(), s.height())
+        pix = QPixmap.fromImage(qimg)
+
+        self.preview.setPixmap(pix)
+
+        
     def __init__(self, args):
         TouchApplication.__init__(self, args)
 
         self.settings = QSettings('ftc', 'plotter')
         self.max_width = int(self.settings.value("max_width", 5000))
         self.max_height = int(self.settings.value("max_height", 3950))
+        self.border = int(self.settings.value("border", 200))
         #um for 1k hpgl units. 1 hpgl unit should be 20um.
         self.mm_max_width = int(self.settings.value("mm_width", 100))
         
@@ -84,15 +102,22 @@ class FtcGuiApplication(TouchApplication):
         vbox = QVBoxLayout()
 
         self.filename = QLabel()
-        vbox.addWidget(self.filename)
+        #vbox.addWidget(self.filename)
 
+        self.preview = QLabel()
+        self.update_preview()
+        vbox.addWidget(self.preview)        
+
+        hbox = QHBoxLayout()
+        vbox.addLayout(hbox)
+        
         self.selectButton = QPushButton("Select")
         self.selectButton.clicked.connect(self.on_select)
-        vbox.addWidget(self.selectButton)
+        hbox.addWidget(self.selectButton)
 
         self.startStopButton = QPushButton("Start")
         self.startStopButton.clicked.connect(self.on_startstop)
-        vbox.addWidget(self.startStopButton)
+        hbox.addWidget(self.startStopButton)
 
         self.q = QProgressBar()
         self.q.setOrientation(Qt.Horizontal)
@@ -100,6 +125,7 @@ class FtcGuiApplication(TouchApplication):
         self.q.setMaximum(100)
         self.q.setTextVisible(False)
         self.q.setValue(0)
+        self.q.setMaximumHeight(20)
         vbox.addWidget(self.q)
 
         menu = w.addMenu()
@@ -165,14 +191,16 @@ class FtcGuiApplication(TouchApplication):
         w.centralWidget.setLayout(vbox)
         ret = w.exec()
 
+        self.cmds = []
+        self.update_buttons()
+        self.update_preview()
+
         if qlist.selectedItems():
             fn = qlist.selectedItems()[0].text()
             self.filename.setText(fn)
             self.load_hpgl(self.datadir + fn)
         else:
             self.filename.setText("")
-            self.cmds = []
-            self.update_buttons()
 
 
     def load_hpgl(self, filename):
@@ -217,9 +245,10 @@ class FtcGuiApplication(TouchApplication):
             self.popup.deleteLater()
             #self.popup = None ## this prevents that the animation is closed
         self.update_buttons()
+        self.update_preview()
         
     def update_buttons(self):
-        self.startStopButton.setText("stop" if self.is_running else "start")
+        self.startStopButton.setText("Stop" if self.is_running else "Start")
         self.startStopButton.setEnabled(len(self.cmds) != 0 and self.plotter is not None)
         #self.selectButton.setEnabled(not self.is_running)
 
