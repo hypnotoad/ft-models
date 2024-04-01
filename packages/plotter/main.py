@@ -126,8 +126,8 @@ class FtcGuiApplication(TouchApplication):
         if os.path.isfile('/etc/fw-ver.txt'):
             self.plotter = plotter.Plotter('localhost', True)
         else:
-            pass
-            #self.plotter = plotter.Plotter('txt3.lan', True)
+            import dummy_plotter
+            self.plotter = dummy_plotter.Plotter()
 
     def compute_ratio(self):
         # 1 hpgl unit should be 25um. Multipler==1 means that
