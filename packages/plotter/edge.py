@@ -25,7 +25,7 @@ class Tracer:
                         for contour in contours]
         cv2.drawContours(img, drawcontours, -1, (0, 0, 0), 1)
 
-    def plt_commands(self, contours, max_height = 3500, max_width = 4000, border = 200):
+    def plt_commands(self, contours, max_height, max_width, border):
         # Returns an output compatible to plt_reader.plt_commands
         scale = min([max_width / self.img.shape[1], max_height / self.img.shape[0]])
         def transform(coord):
@@ -132,8 +132,11 @@ if __name__ == "__main__":
         
     # optimize order of contours
     contours = optimize_order(contours)
-        
-    cmds = t.plt_commands(contours)
+
+    height=3500
+    width=4000
+    border=200
+    cmds = t.plt_commands(contours, height, width, border)
 
     if os.path.isfile('/etc/fw-ver.txt'):
         import plotter
@@ -146,3 +149,20 @@ if __name__ == "__main__":
     tasks = [lambda cmd=cmd: (cmd[1])(plotter) for cmd in cmds]
     for task in tasks:
         task()
+
+    if not os.path.isfile('/etc/fw-ver.txt'):
+        import preview_plotter, cv2
+        plotter = preview_plotter.Plotter(width=width+2*border, height=height+2*border)
+        for cmd in cmds:
+            (cmd[1])(plotter)
+
+        if True:
+            img = plotter.get_cv2_preview(500, 500)
+            cv2.imshow("Preview", img)
+            cv2.waitKey()
+
+        if True:
+            qimg = plotter.get_qt_preview(1000, 1000)
+
+            from PyQt5.QtGui import QPixmap 
+            pixmap = QPixmap.fromImage(qimg)
