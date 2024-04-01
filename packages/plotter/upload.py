@@ -8,7 +8,7 @@ from thirdparty.multipart.multipart import multipart
 
 
 class Worker(QtCore.QObject):
-    file_available = QtCore.pyqtSignal(str)
+    file_available = QtCore.pyqtSignal(str, bool)
     
     def run(self):
         serve_forever()
@@ -23,7 +23,7 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
         return http.server.SimpleHTTPRequestHandler.do_GET(self)
 
     def do_POST(self):
-        if self.path == '/verify':
+        if self.path.startswith('/upload/'):
             def on_field(f):
                 pass
             def on_file(f):
@@ -32,9 +32,10 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
                 dst = tempfile.NamedTemporaryFile(delete=False)
                 shutil.copyfileobj(src, dst)
 
+                is_drawing = self.path.endswith('/hpgl')
                 
                 print("Saved upload as %s." % dst.name)
-                worker.file_available.emit(dst.name)
+                worker.file_available.emit(dst.name, is_drawing)
                 # avoid that it gets deleted
 
             multipart.parse_form(self.headers, self.rfile, on_field, on_file)

@@ -181,13 +181,12 @@ class FtcGuiApplication(TouchApplication):
         ft_mm_s = self.mm_max_width / self.max_width
         return hp_mm_s / ft_mm_s
 
-    def on_file_uploaded(self, filename):
+    def on_file_uploaded(self, filename, drawing):
         print("file %s is available" % filename)
 
-        if is_drawing(filename) or is_image(filename):
-            self.filename.setText("<upload>")
-            self.load_image(filename)
-            self.loader.finished.connect(lambda x, filename=filename: os.remove(filename))
+        self.filename.setText("<upload>")
+        self.load_image(filename, drawing)
+        self.loader.finished.connect(lambda x, filename=filename: os.remove(filename))
 
         
     def on_select(self):
@@ -225,11 +224,14 @@ class FtcGuiApplication(TouchApplication):
         self.filename.setText("")
 
 
-    def load_image(self, filename):
+    def load_image(self, filename, drawing = None):
 
         self.popup = BusyAnimation(parent=self.w, timeout_s=30)
         self.popup.show()
 
+        if drawing is None:
+            drawing = is_drawing(filename)
+        
         class Task(QObject):
             finished = pyqtSignal(object)
             def __init__(self, h, w, r):
@@ -238,7 +240,7 @@ class FtcGuiApplication(TouchApplication):
                 self.max_width=w
                 self.ratio=r
             def run(self):
-                if is_image(filename):
+                if not drawing:
                     import edge
                     contours, tracer = edge.extract_contours(filename)
                         
