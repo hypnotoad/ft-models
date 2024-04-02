@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>HPGL Upload</title>
-</head>
-<body>
-	<form method = 'POST' action="verify" enctype="multipart/form-data">
-		<input type="file" id="file" name="file"><br><br>
-		<input type="submit" value="Submit">
+    <head>
+	<title>Plotter Upload</title>
+    </head>
+    <body>
+	<form method = 'POST' action="upload/image" enctype="multipart/form-data">
+	    <input type="file" id="file" name="file"
+		   accept="image/*">
+	    <input type="submit" value="Submit Image">
 	</form>
-</body>
+	<br><br>
+	<form method = 'POST' action="upload/hpgl" enctype="multipart/form-data">
+	    <input type="file" id="file" name="file"
+		   accept=".hpgl">
+	    <input type="submit" value="Submit HPGL">
+	</form>
+    </body>
 </html>
