@@ -135,9 +135,14 @@ def extract_contours(filename):
 
 
 if __name__ == "__main__":
+    import sys
     print("Opencv version: {}".format(cv2.__version__))
 
-    contours, tracer = extract_contours('data/tree.jpg')
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+    else:
+        filename = 'data/tree.jpg'
+    contours, tracer = extract_contours(filename)
 
     height=3500
     width=4000
