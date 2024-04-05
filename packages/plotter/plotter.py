@@ -200,39 +200,27 @@ if __name__ == '__main__':
   else:
     p = Plotter('txt3.lan', True)
 
-  if False:
-    # ok
-    p.move(-398, 518, True)
-    p.pen(False)
-    p.move(6, -2, True)
-    p.move(6, -2, True)
-    exit(0)
-  if False:
-    p.go(-398, 518)
-    p.pen(False)
-    p.go(-398, 517)
-    # crash
-    print("DONE")
-    p.go(-399, 515)
-    exit(0)
-    
-  #p.test()
+  if True:
+    p.rect()
 
-  #p.rect()
+  if False:
+    p.test()
 
-  #for i in range(10):
-  #  p.pen(True)
-  #  p.pen(False)
+  if False:
+    for i in range(10):
+      p.pen(True)
+      p.pen(False)
 
   if False:
     for i in range(10):
       p.move(-2, 0)
       p.move(2, 0)
-  
-  #p.house()
-  #p.home()
 
-  if True:
+  if False:
+    p.house()
+    p.home()
+
+  if False:
     cmds = plt_commands('data/Weltkarte.plt', max_height = 4000, max_width = 5000)
     for i in range(len(cmds)):
       cmd = cmds[i]
