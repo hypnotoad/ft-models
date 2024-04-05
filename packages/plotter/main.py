@@ -120,7 +120,10 @@ class FtcGuiApplication(TouchApplication):
         #vbox.addWidget(self.filename)
 
         self.preview = QLabel()
-        self.update_preview()
+        s = self.preview.size()
+        self.whitepix = QPixmap(s.width(), s.height())
+        self.whitepix.fill()
+        self.preview.setPixmap(self.whitepix)
         vbox.addWidget(self.preview)        
 
         hbox = QHBoxLayout()
@@ -211,7 +214,7 @@ class FtcGuiApplication(TouchApplication):
 
         self.cmds = []
         self.update_buttons()
-        self.update_preview()
+        self.preview.setPixmap(self.whitepix)
 
         if qlist.selectedItems():
             fn = qlist.selectedItems()[0].text()
