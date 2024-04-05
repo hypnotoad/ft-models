@@ -2,10 +2,17 @@ import http.server
 import pathlib
 
 
+file_available = None
+
+def set_file_available(signal):
+    global file_available
+    file_available = signal
+
 class UploadHandler(http.server.SimpleHTTPRequestHandler):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(pathlib.Path(__file__).parent.resolve()), **kwargs)
-        
+
     def do_GET(self):
         self.path = 'print.html'
         return http.server.SimpleHTTPRequestHandler.do_GET(self)
@@ -26,7 +33,9 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
                 is_drawing = self.path.endswith('/hpgl')
                 
                 print("Saved upload as %s." % dst.name)
-                worker.file_available.emit(dst.name, is_drawing)
+                
+                if file_available:
+                    file_available.emit(dst.name, is_drawing)
                 # avoid that it gets deleted
 
             from thirdparty.multipart.multipart import multipart

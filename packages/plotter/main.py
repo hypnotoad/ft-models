@@ -157,9 +157,10 @@ class FtcGuiApplication(TouchApplication):
             import upload
 
             self.webserver = QThread()
-            upload.worker.moveToThread(self.webserver)
-            self.webserver.started.connect(upload.worker.run) 
-            upload.worker.file_available.connect(self.on_file_uploaded)
+            self.upload_worker = upload.Worker()
+            self.upload_worker.moveToThread(self.webserver)
+            self.webserver.started.connect(self.upload_worker.run) 
+            self.upload_worker.file_available.connect(self.on_file_uploaded)
             self.webserver.start()
 
         self.exec()
