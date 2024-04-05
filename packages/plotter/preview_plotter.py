@@ -4,10 +4,12 @@ from PyQt5.QtGui import QImage
 
 class Plotter:
 
-  def __init__(self, width=4000, height=4000, flip_x = False, flip_y = False):
+  # border is compensated. width, height are assumed to be the canvas size.
+  def __init__(self, width=4000, height=4000, border = 200, flip_x = False, flip_y = False):
     self.flip_x = flip_x
     self.flip_y = flip_y
     self.size = (height, width)
+    self.offset = border
     self.image  = numpy.full(self.size, 255, dtype=numpy.uint8)
     self.pen_is_up = True
     self.position = (0, 0)
@@ -20,9 +22,8 @@ class Plotter:
     self.go(0,0)
 
   def go(self, x, y):
-    x=-x
-    
-    # todo: handle border
+    x += self.offset + self.size[1]
+    y -= self.offset
     
     if self.flip_x:
       x = self.size[1]-x

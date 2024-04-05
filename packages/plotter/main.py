@@ -15,13 +15,13 @@ def is_image(filename):
 def is_drawing(filename):
     return filename.endswith(".plt") or filename.endswith(".hpgl")
 
-def create_preview(cmds, is_drawing, preview_size, canvas_w, canvas_h):
+def create_preview(cmds, is_drawing, preview_size, preview_border, canvas_w, canvas_h):
     import preview_plotter
 
     plotter = preview_plotter.Plotter(width = canvas_w,
                                       height = canvas_h,
-                                      
-                                      flip_x = is_drawing,
+                                      border = preview_border,
+                                      flip_x = not is_drawing,
                                       flip_y = is_drawing)
     for cmd in cmds:
         (cmd[1])(plotter)
@@ -233,12 +233,13 @@ class FtcGuiApplication(TouchApplication):
         
         class Task(QObject):
             finished = pyqtSignal(object, object)
-            def __init__(self, h, w, r, ps):
+            def __init__(self, h, w, r, ps, border):
                 QObject.__init__(self)
                 self.max_height=h
                 self.max_width=w
                 self.ratio=r
                 self.preview_size=ps
+                self.border=border
             def run(self):
                 if not drawing:
                     import edge
@@ -247,7 +248,7 @@ class FtcGuiApplication(TouchApplication):
                     cmds = tracer.plt_commands(contours,
                                                 max_height=self.max_height,
                                                 max_width=self.max_width,
-                                                border=200)
+                                                border=self.border)
                 else:
                     cmds = plotter.plt_commands(filename,
                                                 max_height=self.max_height,
@@ -255,12 +256,13 @@ class FtcGuiApplication(TouchApplication):
                                                 multiplier=self.ratio)
 
                 pix = create_preview(cmds, drawing, preview_size = self.preview_size,
+                                     preview_border = self.border,
                                      canvas_w = self.max_width, canvas_h = self.max_height)
                 self.finished.emit(cmds, pix)
 
         self.loader_thread = QThread()
         self.loader = Task(self.max_height, self.max_width, self.compute_ratio(),
-                           self.preview.size())
+                           self.preview.size(), self.border)
         
         self.loader.moveToThread(self.loader_thread)
         self.loader.finished.connect(self.on_update_cmds)
