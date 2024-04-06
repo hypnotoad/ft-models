@@ -19,7 +19,9 @@ class Worker(QObject):
         self.prevlight = False
         self.ticks = 0
         self.started = None
+        print("worker started")
         while not QThread.currentThread().isInterruptionRequested():
+            # 15ms frequency of this loop
             state = self.ft_timer.step()
             light = state['value'] < 1000
             transition = self.prevlight and not light
@@ -32,7 +34,7 @@ class Worker(QObject):
                 diff = state['time'] - self.started
                 trigger =  transition and diff > self.min_seconds
 
-            if trigger or self.ticks % 100 == 0:
+            if trigger or self.ticks % 10 == 0:
                 self.detection.emit({'diff': diff, 'ticks': self.ticks, 'trigger': trigger})
 
             if trigger or transition and not self.started:
@@ -56,6 +58,17 @@ class FtcGuiApplication(TouchApplication):
         w = TouchWindow("Stopuhr")
         vbox = QVBoxLayout()
 
+        hbox = QHBoxLayout()
+        vbox.addLayout(hbox)
+
+        self.startButton = QPushButton("Start")
+        self.startButton.clicked.connect(self.on_startstop)
+        hbox.addWidget(self.startButton)
+
+        self.clearButton = QPushButton("Clear")
+        self.clearButton.clicked.connect(self.on_clear)
+        hbox.addWidget(self.clearButton)
+        
         self.currWidget = QLabel()
         vbox.addWidget(self.currWidget)
         
@@ -65,17 +78,33 @@ class FtcGuiApplication(TouchApplication):
         self.bestWidget = QLabel()
         vbox.addWidget(self.bestWidget)
 
+        self.on_clear()
+        
         w.centralWidget.setLayout(vbox)
         w.show()
 
-        self.launch_thread()
         self.exec()
-        self.stop_thread()
 
+    def on_startstop(self):
+        if self.ft_thread:
+            self.stop_thread()
+            self.startButton.setText("Start")
+        else:
+            self.launch_thread()
+            self.startButton.setText("Stop")
+
+    def on_clear(self):
+        self.best_timing = None
+        self.currWidget.setText("not started")
+        self.prevWidget.setText("no prev lap")
+        self.bestWidget.setText("no best lap")
+        
+        
     def on_detection(self, event):
-        print(event)
+        #print(event)
         timing = event['diff']
-        self.currWidget.setText(("curr %3.3f s" % timing) if timing else "<not started>")
+        if timing:
+            self.currWidget.setText("curr %3.3f s" % timing)
 
         if not event['trigger']:
             return
@@ -93,6 +122,8 @@ class FtcGuiApplication(TouchApplication):
 
     def stop_thread(self):
         self.ft_thread.requestInterruption()
+        self.ft_thread_old = self.ft_thread
+        self.ft_thread = None
 
     def launch_thread(self):
         self.ft_thread = QThread()
