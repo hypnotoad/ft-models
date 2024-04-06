@@ -11,32 +11,36 @@ class Worker(QObject):
     finished = pyqtSignal()
 
     def __init__(self, ft_timer):
+        super().__init__()
         self.ft_timer = ft_timer
         
     def run(self):
-        self.prevdetection = False
+        self.started = None
+        self.prevlight = False
         self.min_seconds = 1
-        while QThread.currentThread().isInterruptionRequested():
+        self.ticks = 0
+        while not QThread.currentThread().isInterruptionRequested():
             state = self.ft_timer.step()
-            detection = state['value'] > 10000
-            transition = detection and not self.prevdetection
-            self.prevdetection = detection
+            light = state['value'] < 1000
+            transition = self.prevlight and not light
+            self.prevlight = light
+            self.ticks += 1
 
-            if self.started:
-                diff = state['time'] - self.started
-                self.currWidget.setText("%3.3f s" % diff)
-        
             if not transition:
                 continue
         
             if not self.started:
                 self.started = state['time']
+                self.ticks = 0
                 continue
 
-            if diff > self.min_seconds:
-                self.started = state['time']
-                self.stateWidget.setText("%3.3f s" % diff)
+            diff = state['time'] - self.started
+            if diff < self.min_seconds:
                 continue
+
+            self.started = state['time']
+            self.detection.emit({'diff': diff, 'ticks': self.ticks})
+            continue
 
         print("worker finished")
         self.tasks = []
@@ -47,8 +51,7 @@ class FtcGuiApplication(TouchApplication):
     def __init__(self, args):
         TouchApplication.__init__(self, args)
 
-        self.ft_timer = FtTiming(4)
-        self.started = None
+        self.ft_timer = FtTiming(1)
 
         # create the empty main window
         w = TouchWindow("Stopuhr")
@@ -60,37 +63,35 @@ class FtcGuiApplication(TouchApplication):
         self.stateWidget = QLabel()
         vbox.addWidget(self.stateWidget)
 
-        
         w.centralWidget.setLayout(vbox)
         w.show()
-        self.exec_()
 
-    def launch_thread(self, tasks):
-        print("Launching thread with %d tasks" % len(tasks))
-        # self.plotter_thread and self.worker are cleaned up by QT. That means
-        # that we must never call launch_thread if a thread is still
-        # running.
-        if self.is_running:
-            print("launch_thread called but running!")
-            return
-        self.is_running = True
+        self.launch_thread()
+        self.exec()
+        self.stop_thread()
+
+    def on_detection(self, event):
+        resolution = event['diff'] / event['ticks'] * 1000
+        print("detection resolution: {} ms".format(resolution))
+        self.currWidget.setText("%3.3f s" % event['diff'])
         
-        self.plotter_thread = QThread()
+
+    def stop_thread(self):
+        self.ft_thread.requestInterruption()
+
+    def launch_thread(self):
+        self.ft_thread = QThread()
         self.worker = Worker(self.ft_timer)
-        self.worker.set_tasks(tasks)
-        self.worker.moveToThread(self.plotter_thread)
-        
-        self.worker.progress.connect(self.on_progress)
-        self.worker.finished.connect(self.plotter_thread.quit)
-        self.plotter_thread.started.connect(lambda: self.on_running(True))
-        self.plotter_thread.started.connect(self.worker.run)
-        self.plotter_thread.finished.connect(lambda: self.on_running(False))
-        self.plotter_thread.finished.connect(self.worker.deleteLater)
-        self.plotter_thread.finished.connect(self.plotter_thread.deleteLater)
-        self.plotter_thread.finished.connect(lambda: print("plotter thread finished"))
 
-        self.plotter_thread.start()
-        print("plotter thread started")
+        self.worker.moveToThread(self.ft_thread)
+        self.worker.detection.connect(self.on_detection)
+        self.worker.finished.connect(self.ft_thread.quit)
+        self.ft_thread.started.connect(self.worker.run)
+        self.ft_thread.finished.connect(self.worker.deleteLater)
+        self.ft_thread.finished.connect(self.ft_thread.deleteLater)
+
+        self.ft_thread.start()
+
 
             
         
