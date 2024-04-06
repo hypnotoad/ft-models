@@ -13,12 +13,12 @@ class Worker(QObject):
     def __init__(self, ft_timer):
         super().__init__()
         self.ft_timer = ft_timer
+        self.min_seconds = 1
         
     def run(self):
-        self.started = None
         self.prevlight = False
-        self.min_seconds = 1
         self.ticks = 0
+        self.started = None
         while not QThread.currentThread().isInterruptionRequested():
             state = self.ft_timer.step()
             light = state['value'] < 1000
@@ -26,21 +26,18 @@ class Worker(QObject):
             self.prevlight = light
             self.ticks += 1
 
-            if not transition:
-                continue
-        
-            if not self.started:
+            diff = None
+            trigger = False
+            if self.started:
+                diff = state['time'] - self.started
+                trigger =  transition and diff > self.min_seconds
+
+            if trigger or self.ticks % 100 == 0:
+                self.detection.emit({'diff': diff, 'ticks': self.ticks, 'trigger': trigger})
+
+            if trigger or transition and not self.started:
                 self.started = state['time']
                 self.ticks = 0
-                continue
-
-            diff = state['time'] - self.started
-            if diff < self.min_seconds:
-                continue
-
-            self.started = state['time']
-            self.detection.emit({'diff': diff, 'ticks': self.ticks})
-            continue
 
         print("worker finished")
         self.tasks = []
@@ -52,6 +49,8 @@ class FtcGuiApplication(TouchApplication):
         TouchApplication.__init__(self, args)
 
         self.ft_timer = FtTiming(1)
+        self.ft_thread = None
+        self.best_timing = None
 
         # create the empty main window
         w = TouchWindow("Stopuhr")
@@ -60,8 +59,11 @@ class FtcGuiApplication(TouchApplication):
         self.currWidget = QLabel()
         vbox.addWidget(self.currWidget)
         
-        self.stateWidget = QLabel()
-        vbox.addWidget(self.stateWidget)
+        self.prevWidget = QLabel()
+        vbox.addWidget(self.prevWidget)
+
+        self.bestWidget = QLabel()
+        vbox.addWidget(self.bestWidget)
 
         w.centralWidget.setLayout(vbox)
         w.show()
@@ -71,10 +73,23 @@ class FtcGuiApplication(TouchApplication):
         self.stop_thread()
 
     def on_detection(self, event):
+        print(event)
+        timing = event['diff']
+        self.currWidget.setText(("curr %3.3f s" % timing) if timing else "<not started>")
+
+        if not event['trigger']:
+            return
+
         resolution = event['diff'] / event['ticks'] * 1000
         print("detection resolution: {} ms".format(resolution))
-        self.currWidget.setText("%3.3f s" % event['diff'])
+
+        self.prevWidget.setText("prev %3.3f s" % timing)
+
+        if not self.best_timing or self.best_timing > timing:
+            self.best_timing = timing
+            self.bestWidget.setText("best %3.3f s" % event['diff'])
         
+
 
     def stop_thread(self):
         self.ft_thread.requestInterruption()
