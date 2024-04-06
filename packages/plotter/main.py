@@ -15,6 +15,20 @@ def is_image(filename):
 def is_drawing(filename):
     return filename.endswith(".plt") or filename.endswith(".hpgl")
 
+def create_preview(cmds, is_drawing, preview_size, preview_border, canvas_w, canvas_h):
+    import preview_plotter
+
+    plotter = preview_plotter.Plotter(width = canvas_w,
+                                      height = canvas_h,
+                                      border = preview_border,
+                                      flip_x = not is_drawing,
+                                      flip_y = is_drawing)
+    for cmd in cmds:
+        (cmd[1])(plotter)
+
+    qimg = plotter.get_qt_preview(preview_size.width(), preview_size.height())
+    return QPixmap.fromImage(qimg)
+
 
 class Worker(QObject):
     finished = pyqtSignal()
@@ -74,24 +88,6 @@ class FtcGuiApplication(TouchApplication):
         self.is_running = running
         self.update_buttons()
 
-    def update_preview(self):
-        import preview_plotter
-
-        # images are mirrored compared to hpgl coordinates (legacy definition)
-        flip_x = is_drawing(self.filename.text())
-        flip_y = is_drawing(self.filename.text())
-        
-        plotter = preview_plotter.Plotter(width = self.max_width+2*self.border,
-                                          height = self.max_height+2*self.border,
-                                          flip_x = flip_x,
-                                          flip_y = flip_y)
-        for cmd in self.cmds:
-            (cmd[1])(plotter)
-        s = self.preview.size()
-        qimg = plotter.get_qt_preview(s.width(), s.height())
-        pix = QPixmap.fromImage(qimg)
-
-        self.preview.setPixmap(pix)
 
         
     def __init__(self, args):
@@ -116,11 +112,13 @@ class FtcGuiApplication(TouchApplication):
         w = TouchWindow("Plotter")
         vbox = QVBoxLayout()
 
-        self.filename = QLabel()
-        #vbox.addWidget(self.filename)
+        self.filename = ""
 
         self.preview = QLabel()
-        self.update_preview()
+        s = self.preview.size()
+        self.whitepix = QPixmap(s.width(), s.height())
+        self.whitepix.fill()
+        self.preview.setPixmap(self.whitepix)
         vbox.addWidget(self.preview)        
 
         hbox = QHBoxLayout()
@@ -159,9 +157,10 @@ class FtcGuiApplication(TouchApplication):
             import upload
 
             self.webserver = QThread()
-            upload.worker.moveToThread(self.webserver)
-            self.webserver.started.connect(upload.worker.run) 
-            upload.worker.file_available.connect(self.on_file_uploaded)
+            self.upload_worker = upload.Worker()
+            self.upload_worker.moveToThread(self.webserver)
+            self.webserver.started.connect(self.upload_worker.run) 
+            self.upload_worker.file_available.connect(self.on_file_uploaded)
             self.webserver.start()
 
         self.exec()
@@ -184,9 +183,9 @@ class FtcGuiApplication(TouchApplication):
     def on_file_uploaded(self, filename, drawing):
         print("file %s is available" % filename)
 
-        self.filename.setText("<upload>")
+        self.filename = "<upload>"
         self.load_image(filename, drawing)
-        self.loader.finished.connect(lambda x, filename=filename: os.remove(filename))
+        self.loader.finished.connect(lambda x, y, filename=filename: os.remove(filename))
 
         
     def on_select(self):
@@ -211,17 +210,17 @@ class FtcGuiApplication(TouchApplication):
 
         self.cmds = []
         self.update_buttons()
-        self.update_preview()
+        self.preview.setPixmap(self.whitepix)
 
         if qlist.selectedItems():
             fn = qlist.selectedItems()[0].text()
             if is_drawing(fn) or is_image(fn):
-                self.filename.setText(fn)
+                self.filename = fn
                 self.load_image(self.datadir + fn)
                 return
 
         # failure
-        self.filename.setText("")
+        self.filename = ""
 
 
     def load_image(self, filename, drawing = None):
@@ -233,12 +232,14 @@ class FtcGuiApplication(TouchApplication):
             drawing = is_drawing(filename)
         
         class Task(QObject):
-            finished = pyqtSignal(object)
-            def __init__(self, h, w, r):
+            finished = pyqtSignal(object, object)
+            def __init__(self, h, w, r, ps, border):
                 QObject.__init__(self)
                 self.max_height=h
                 self.max_width=w
                 self.ratio=r
+                self.preview_size=ps
+                self.border=border
             def run(self):
                 if not drawing:
                     import edge
@@ -247,16 +248,21 @@ class FtcGuiApplication(TouchApplication):
                     cmds = tracer.plt_commands(contours,
                                                 max_height=self.max_height,
                                                 max_width=self.max_width,
-                                                border=200)
+                                                border=self.border)
                 else:
                     cmds = plotter.plt_commands(filename,
                                                 max_height=self.max_height,
                                                 max_width=self.max_width,
                                                 multiplier=self.ratio)
-                self.finished.emit(cmds)
+
+                pix = create_preview(cmds, drawing, preview_size = self.preview_size,
+                                     preview_border = self.border,
+                                     canvas_w = self.max_width, canvas_h = self.max_height)
+                self.finished.emit(cmds, pix)
 
         self.loader_thread = QThread()
-        self.loader = Task(self.max_height, self.max_width, self.compute_ratio())
+        self.loader = Task(self.max_height, self.max_width, self.compute_ratio(),
+                           self.preview.size(), self.border)
         
         self.loader.moveToThread(self.loader_thread)
         self.loader.finished.connect(self.on_update_cmds)
@@ -270,7 +276,7 @@ class FtcGuiApplication(TouchApplication):
         print("loader thread started")
 
 
-    def on_update_cmds(self, cmds):
+    def on_update_cmds(self, cmds, pix):
         print("received %d cmds" % len(cmds))
         self.cmds = cmds
         self.on_progress(0)
@@ -279,8 +285,8 @@ class FtcGuiApplication(TouchApplication):
             self.popup.deleteLater()
             #self.popup = None ## this prevents that the animation is closed
         self.update_buttons()
-        self.update_preview()
-        
+        self.preview.setPixmap(pix)
+
     def update_buttons(self):
         self.startStopButton.setText("Stop" if self.is_running else "Start")
         self.startStopButton.setEnabled(len(self.cmds) != 0 and self.plotter is not None)
