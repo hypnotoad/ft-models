@@ -53,3 +53,16 @@ managed: yes
 uuid: 155710e1-be0b-4eaf-a1ed-6f50bf199a68
 version: 1.1
 firmware: >=1.1.0
+
+[stopuhr]
+name: Stopuhr
+category: Tools
+author: Ralf Dragon
+icon: icon.png
+desc: Stopuhr
+url: https://www.lindra.de
+exec: main.py
+managed: yes
+uuid: 15916f49-8379-44e7-8a18-b77fbc70fc4e
+version: 0.9
+firmware: 0.9
