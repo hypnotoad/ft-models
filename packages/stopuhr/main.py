@@ -11,32 +11,35 @@ class Worker(QObject):
     finished = pyqtSignal()
 
     def __init__(self, ft_timer):
+        super().__init__()
         self.ft_timer = ft_timer
+        self.min_seconds = 1
         
     def run(self):
-        self.prevdetection = False
-        self.min_seconds = 1
-        while QThread.currentThread().isInterruptionRequested():
+        self.prevlight = False
+        self.ticks = 0
+        self.started = None
+        print("worker started")
+        while not QThread.currentThread().isInterruptionRequested():
+            # 15ms frequency of this loop
             state = self.ft_timer.step()
-            detection = state['value'] > 10000
-            transition = detection and not self.prevdetection
-            self.prevdetection = detection
+            light = state['value'] < 1000
+            transition = self.prevlight and not light
+            self.prevlight = light
+            self.ticks += 1
 
+            diff = None
+            trigger = False
             if self.started:
                 diff = state['time'] - self.started
-                self.currWidget.setText("%3.3f s" % diff)
-        
-            if not transition:
-                continue
-        
-            if not self.started:
-                self.started = state['time']
-                continue
+                trigger =  transition and diff > self.min_seconds
 
-            if diff > self.min_seconds:
+            if trigger or self.ticks % 10 == 0:
+                self.detection.emit({'diff': diff, 'ticks': self.ticks, 'trigger': trigger})
+
+            if trigger or transition and not self.started:
                 self.started = state['time']
-                self.stateWidget.setText("%3.3f s" % diff)
-                continue
+                self.ticks = 0
 
         print("worker finished")
         self.tasks = []
@@ -47,50 +50,94 @@ class FtcGuiApplication(TouchApplication):
     def __init__(self, args):
         TouchApplication.__init__(self, args)
 
-        self.ft_timer = FtTiming(4)
-        self.started = None
+        self.ft_timer = FtTiming(1)
+        self.ft_thread = None
+        self.best_timing = None
 
         # create the empty main window
         w = TouchWindow("Stopuhr")
         vbox = QVBoxLayout()
 
+        hbox = QHBoxLayout()
+        vbox.addLayout(hbox)
+
+        self.startButton = QPushButton("Start")
+        self.startButton.clicked.connect(self.on_startstop)
+        hbox.addWidget(self.startButton)
+
+        self.clearButton = QPushButton("Clear")
+        self.clearButton.clicked.connect(self.on_clear)
+        hbox.addWidget(self.clearButton)
+        
         self.currWidget = QLabel()
         vbox.addWidget(self.currWidget)
         
-        self.stateWidget = QLabel()
-        vbox.addWidget(self.stateWidget)
+        self.prevWidget = QLabel()
+        vbox.addWidget(self.prevWidget)
 
+        self.bestWidget = QLabel()
+        vbox.addWidget(self.bestWidget)
+
+        self.on_clear()
         
         w.centralWidget.setLayout(vbox)
         w.show()
-        self.exec_()
 
-    def launch_thread(self, tasks):
-        print("Launching thread with %d tasks" % len(tasks))
-        # self.plotter_thread and self.worker are cleaned up by QT. That means
-        # that we must never call launch_thread if a thread is still
-        # running.
-        if self.is_running:
-            print("launch_thread called but running!")
+        self.exec()
+
+    def on_startstop(self):
+        if self.ft_thread:
+            self.stop_thread()
+            self.startButton.setText("Start")
+        else:
+            self.launch_thread()
+            self.startButton.setText("Stop")
+
+    def on_clear(self):
+        self.best_timing = None
+        self.currWidget.setText("not started")
+        self.prevWidget.setText("no prev lap")
+        self.bestWidget.setText("no best lap")
+        
+        
+    def on_detection(self, event):
+        #print(event)
+        timing = event['diff']
+        if timing:
+            self.currWidget.setText("curr %3.3f s" % timing)
+
+        if not event['trigger']:
             return
-        self.is_running = True
-        
-        self.plotter_thread = QThread()
-        self.worker = Worker(self.ft_timer)
-        self.worker.set_tasks(tasks)
-        self.worker.moveToThread(self.plotter_thread)
-        
-        self.worker.progress.connect(self.on_progress)
-        self.worker.finished.connect(self.plotter_thread.quit)
-        self.plotter_thread.started.connect(lambda: self.on_running(True))
-        self.plotter_thread.started.connect(self.worker.run)
-        self.plotter_thread.finished.connect(lambda: self.on_running(False))
-        self.plotter_thread.finished.connect(self.worker.deleteLater)
-        self.plotter_thread.finished.connect(self.plotter_thread.deleteLater)
-        self.plotter_thread.finished.connect(lambda: print("plotter thread finished"))
 
-        self.plotter_thread.start()
-        print("plotter thread started")
+        resolution = event['diff'] / event['ticks'] * 1000
+        print("detection resolution: {} ms".format(resolution))
+
+        self.prevWidget.setText("prev %3.3f s" % timing)
+
+        if not self.best_timing or self.best_timing > timing:
+            self.best_timing = timing
+            self.bestWidget.setText("best %3.3f s" % event['diff'])
+        
+
+
+    def stop_thread(self):
+        self.ft_thread.requestInterruption()
+        self.ft_thread_old = self.ft_thread
+        self.ft_thread = None
+
+    def launch_thread(self):
+        self.ft_thread = QThread()
+        self.worker = Worker(self.ft_timer)
+
+        self.worker.moveToThread(self.ft_thread)
+        self.worker.detection.connect(self.on_detection)
+        self.worker.finished.connect(self.ft_thread.quit)
+        self.ft_thread.started.connect(self.worker.run)
+        self.ft_thread.finished.connect(self.worker.deleteLater)
+        self.ft_thread.finished.connect(self.ft_thread.deleteLater)
+
+        self.ft_thread.start()
+
 
             
         

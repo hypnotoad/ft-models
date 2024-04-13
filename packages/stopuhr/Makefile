@@ -1,9 +1,6 @@
-stopuhr.zip: main.py ft_timing.py icon.png manifest
-	rm -f $@
-	zip $@ $^ 
+../stopuhr.zip: main.py ft_timing.py icon.png manifest
+	zip -u -r $@ $^ 
 
-test:
-	PYTHONPATH=../../ftrobopy FT_TXT=txt1 ./ft_timing.py
-
-uitest:
-	FT_TXT=txt1 PYTHONPATH=../../ftcommunity-TXT/board/fischertechnik/TXT/rootfs/opt/ftc:../../ftrobopy python3 main.py 
+install:
+	rsync -av *.py txt5:stopuhr
+#apps/155710e1-be0b-4eaf-a1ed-6f50bf199a68
