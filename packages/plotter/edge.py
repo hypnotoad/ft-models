@@ -163,7 +163,9 @@ if __name__ == "__main__":
 
     if not os.path.isfile('/etc/fw-ver.txt'):
         import preview_plotter, cv2
-        plotter = preview_plotter.Plotter(width=width+2*border, height=height+2*border)
+        plotter = preview_plotter.Plotter(width=width+2*border,
+                                          height=height+2*border,
+                                          flip_x=True)
         for cmd in cmds:
             (cmd[1])(plotter)
 
