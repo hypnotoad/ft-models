@@ -13,7 +13,9 @@ class Worker(QObject):
     def __init__(self, ft_timer):
         super().__init__()
         self.ft_timer = ft_timer
+        
         self.min_seconds = 1
+        self.thresh=10000
         
     def run(self):
         self.prevlight = False
@@ -23,7 +25,7 @@ class Worker(QObject):
         while not QThread.currentThread().isInterruptionRequested():
             # 15ms frequency of this loop
             state = self.ft_timer.step()
-            light = state['value'] < 1000
+            light = state['value'] < self.thresh
             transition = self.prevlight and not light
             self.prevlight = light
             self.ticks += 1
