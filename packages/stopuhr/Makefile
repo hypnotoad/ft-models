@@ -2,5 +2,4 @@
 	zip -u -r $@ $^ 
 
 install:
-	rsync -av *.py txt5:stopuhr
-#apps/155710e1-be0b-4eaf-a1ed-6f50bf199a68
+	rsync -av *.py txt5:apps/15916f49-8379-44e7-8a18-b77fbc70fc4e

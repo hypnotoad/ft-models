@@ -1,6 +1,6 @@
 [app]
 name: Stopuhr
-category: Tools
+category: Modelle
 author: Ralf Dragon
 icon: icon.png
 desc: Stopuhr mit Sensoreingang
@@ -8,5 +8,5 @@ url: https://github.com/hypnotoad/ft-models.git
 exec: main.py
 managed: yes
 uuid: 15916f49-8379-44e7-8a18-b77fbc70fc4e
-version: 0.9
+version: 1.0
 firmware: >= 1.0

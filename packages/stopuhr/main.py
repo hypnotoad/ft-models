@@ -37,7 +37,10 @@ class Worker(QObject):
                 trigger =  transition and diff > self.min_seconds
 
             if trigger or self.ticks % 10 == 0:
-                self.detection.emit({'diff': diff, 'ticks': self.ticks, 'trigger': trigger})
+                self.detection.emit({'diff': diff,
+                                     'ticks': self.ticks,
+                                     'trigger': trigger,
+                                     'detected': light})
 
             if trigger or transition and not self.started:
                 self.started = state['time']
@@ -63,6 +66,10 @@ class FtcGuiApplication(TouchApplication):
         hbox = QHBoxLayout()
         vbox.addLayout(hbox)
 
+        self.laserReceived = QCheckBox()
+        self.laserReceived.setMaximumWidth(32)
+        hbox.addWidget(self.laserReceived)
+        
         self.startButton = QPushButton("Start")
         self.startButton.clicked.connect(self.on_startstop)
         hbox.addWidget(self.startButton)
@@ -105,6 +112,9 @@ class FtcGuiApplication(TouchApplication):
     def on_detection(self, event):
         #print(event)
         timing = event['diff']
+
+        self.laserReceived.setChecked(event['detected'])
+        
         if timing:
             self.currWidget.setText("curr %3.3f s" % timing)
 
