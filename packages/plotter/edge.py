@@ -4,7 +4,9 @@ import os
         
 class Tracer:
     def __init__(self, grayscale, thr1 = 50, thr2 = 200):
+        # use to follow edges longer
         self.thr1 = thr1
+        # use to detect more edges
         self.thr2 = thr2
         self.img = grayscale
 
@@ -72,7 +74,7 @@ def optimize_order(contours):
         
     return retval
 
-def extract_contours(filename):
+def extract_contours(filename, max_contours=1000, max_points=5000):
     img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
     assert img is not None
 
@@ -83,14 +85,27 @@ def extract_contours(filename):
         print("Scaling down to {}%".format(scale*100))
         img = cv2.resize(img, None, fx=scale, fy=scale, interpolation = cv2.INTER_AREA)
 
-    t = Tracer(img)
+    thr1 = 50
+    thr2 = 200
+    while True:
+        t = Tracer(img, thr1=thr1, thr2=thr2)
 
-    contours, edges = t.extract_contours()
+        contours, edges = t.extract_contours()
+        sum_length = sum([len(x) for x in contours])
+        print("{} contours were extracted with a total of {} points".
+              format(len(contours), sum_length))
 
-    sum_length = sum([len(x) for x in contours])
+        if len(contours) < max_contours and sum_length < max_points:
+            break
+        
+        if len(contours) >= max_contours:
+            thr2 *= 1.1
+            print("Increasing thr2 to {}".format(thr2))
+        else:
+            thr1 *= 1.1
+            print("Increasing thr1 to {}".format(thr1))
+
     mean_length = sum_length / len(contours)
-    print("{} contours were extracted with a total of {} points".
-          format(len(contours), sum_length))
 
     longcontours = [x for x in contours if len(x) > mean_length]
     print("{} contours are longer than the mean {}".
@@ -163,7 +178,9 @@ if __name__ == "__main__":
 
     if not os.path.isfile('/etc/fw-ver.txt'):
         import preview_plotter, cv2
-        plotter = preview_plotter.Plotter(width=width+2*border, height=height+2*border)
+        plotter = preview_plotter.Plotter(width=width+2*border,
+                                          height=height+2*border,
+                                          flip_x=True)
         for cmd in cmds:
             (cmd[1])(plotter)
 
