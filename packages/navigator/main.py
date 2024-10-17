@@ -48,7 +48,7 @@ class FtcGuiApplication(TouchApplication):
 
         markerCorners, markerIds, rejectedCandidates = self.detector.detect(im)
 
-        if markerIds:
+        if markerIds is not None:
             detected = str(markerIds)
         else:
             detected = ""

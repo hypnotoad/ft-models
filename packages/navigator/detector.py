@@ -1,6 +1,8 @@
 import cv2
 import ftrobopy
 import semantic_version
+from datetime import datetime
+    
 
 class Detector:
     def __init__(self):
@@ -67,8 +69,6 @@ class Camera:
         return image
 
 if __name__ == "__main__":
-    from datetime import datetime
-    
     cam = Camera()
     detector = Detector()
 
