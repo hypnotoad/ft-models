@@ -1,4 +1,4 @@
-../navigator.zip: main.py
+../navigator.zip: main.py img-001.png
 	zip -u -r $@ $^ 
 
 clean:

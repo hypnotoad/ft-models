@@ -2,7 +2,7 @@
 name: Natigator
 category: Modelle
 author: Ralf Dragon
-icon: navigator.png
+icon: img-001.png
 desc: Navigator-UI
 url: https://github.com/hypnotoad/ft-models.git
 exec: main.py
