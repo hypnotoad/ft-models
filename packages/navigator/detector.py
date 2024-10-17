@@ -13,7 +13,7 @@ class Detector:
 
     def detect(self, img):
         if (semantic_version.Version(cv2.__version__) >= semantic_version.Version('4.7.0')):
-            return self.detector.detectMarkers(I)
+            return self.detector.detectMarkers(img)
         else:
             return cv2.aruco.detectMarkers(img, self.dictionary)
 
@@ -30,9 +30,11 @@ class Camera:
         self.cvcam = cv2.VideoCapture(0)
         if self.cvcam.get(cv2.CAP_PROP_FRAME_WIDTH) == 640:
             self.cvcam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-            self.cvcam.set(cv2.CAP_PROP_FPS, 2)
-            self.cvcam.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-            self.cvcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+            self.cvcam.set(cv2.CAP_PROP_FPS, 1) # no impact
+            self.cvcam.set(cv2.CAP_PROP_BUFFERSIZE, 3)
+            if True:
+                self.cvcam.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+                self.cvcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
         print("Resolution is %d x %d" % (self.cvcam.get(cv2.CAP_PROP_FRAME_WIDTH),
                                          self.cvcam.get(cv2.CAP_PROP_FRAME_HEIGHT)))
@@ -42,6 +44,16 @@ class Camera:
         image = None
         
         if self.cvcam:
+            while True:
+                t1 = datetime.now()
+                status = self.cvcam.grab()
+                t2 = datetime.now()
+                dt = t2-t1
+                #print("{} {}".format(status, dt))
+                if dt.total_seconds() > 0.01:
+                    # discard buffer
+                    break
+            image = self.cvcam.retrieve()
             status, image = self.cvcam.read()
 
         elif self.txt:
@@ -60,18 +72,29 @@ if __name__ == "__main__":
     cam = Camera()
     detector = Detector()
 
+    prevstart = None
+
     while True:
-        print('read')
+        start_read = datetime.now()
         I = cam.getImage()
         if I is None:
             print("failed to grab frame")
             continue
-        start=datetime.now()
+        start_det=datetime.now()
         markerCorners, markerIds, rejectedCandidates = detector.detect(I)
-        print(datetime.now()-start)
+        done = datetime.now()
+        detections = str(markerIds)
 
-        print(markerIds)
+        if prevstart:
+            dl = start_read - prevstart
+            dr = start_det - start_read
+            dd = done - start_det
+            print("Loop % 4d, read % 4d, detect % 4d ms: %s" % (dl.total_seconds()*1000, dr.total_seconds()*1000,
+                                                                dd.total_seconds()*1000, detections))
 
+
+
+        prevstart = start_read
 
 
 
