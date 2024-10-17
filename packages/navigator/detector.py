@@ -28,7 +28,15 @@ class Camera:
 
         
         self.cvcam = cv2.VideoCapture(0)
-        self.cvcam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        if self.cvcam.get(cv2.CAP_PROP_FRAME_WIDTH) == 640:
+            self.cvcam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+            self.cvcam.set(cv2.CAP_PROP_FPS, 2)
+            self.cvcam.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+            self.cvcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+
+        print("Resolution is %d x %d" % (self.cvcam.get(cv2.CAP_PROP_FRAME_WIDTH),
+                                         self.cvcam.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+
         
     def getImage(self):
         image = None
