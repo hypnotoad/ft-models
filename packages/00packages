@@ -40,6 +40,19 @@ uuid: bdf10bb8-5d97-41a0-a887-213d6d4c053c
 version: 1.0
 firmware: >=1.0.2
 
+[navigator]
+name: Navigator
+category: Modelle
+author: Ralf Dragon
+icon: aruco.png
+desc: Navigator-UI
+url: https://github.com/hypnotoad/ft-models.git
+exec: main.py
+managed: yes
+uuid: 1a598566-8137-4993-854d-3e294a8e6a60
+version: 0.9
+firmware: >=1.0.5
+
 [plotter]
 name: Plotter
 category: Modelle
