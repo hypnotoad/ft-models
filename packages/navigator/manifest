@@ -1,8 +1,8 @@
 [app]
-name: Natigator
+name: Navigator
 category: Modelle
 author: Ralf Dragon
-icon: img-001.png
+icon: aruco.png
 desc: Navigator-UI
 url: https://github.com/hypnotoad/ft-models.git
 exec: main.py
