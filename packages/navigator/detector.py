@@ -34,7 +34,7 @@ class Camera:
             self.cvcam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
             self.cvcam.set(cv2.CAP_PROP_FPS, 1) # no impact
             self.cvcam.set(cv2.CAP_PROP_BUFFERSIZE, 3)
-            if True:
+            if False:
                 self.cvcam.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
                 self.cvcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
