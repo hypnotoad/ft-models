@@ -72,9 +72,8 @@ if __name__ == "__main__":
     cam = Camera()
     detector = Detector()
 
-    prevstart = None
-
-    while True:
+    start_read_previous = None
+    for bild_nr in range(1000000):
         start_read = datetime.now()
         I = cam.getImage()
         if I is None:
@@ -85,8 +84,8 @@ if __name__ == "__main__":
         done = datetime.now()
         detections = str(markerIds)
 
-        if prevstart:
-            dl = start_read - prevstart
+        if start_read_previous:
+            dl = start_read - start_read_previous
             dr = start_det - start_read
             dd = done - start_det
             print("Loop % 4d, read % 4d, detect % 4d ms: %s" % (dl.total_seconds()*1000, dr.total_seconds()*1000,
@@ -94,7 +93,7 @@ if __name__ == "__main__":
 
 
 
-        prevstart = start_read
+        start_read_previous = start_read
 
 
 
