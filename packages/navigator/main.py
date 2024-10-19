@@ -17,7 +17,7 @@ class FtcGuiApplication(TouchApplication):
         self.camera = detector.Camera()
         self.detector = detector.Detector()
         self.calib = Calibration()
-        self.calib.load("calibration.json")
+        self.calib.load(os.path.dirname(__file__) + "/calibration.json")
 
         # create the empty main window
         w = TouchWindow("Navigator")
