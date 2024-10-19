@@ -73,16 +73,20 @@ class Camera:
         return image
 
 if __name__ == "__main__":
+    calibFilename = "calibration.json"
+    
     cam = Camera()
     detector = Detector()
-
-    if True:
+    calib = Calibration()
+    calib.load(calibFilename)
+    
+    if not calib.valid():
         board = cv2.aruco.CharucoBoard((5, 3), 10, 5, detector.getDictionary())
         #board = cv2.aruco.CharucoBoard.create(5, 3, 10, 5, dictionary)
-        c_detector = cv2.aruco.CharucoDetector(board)
+        calibrator = cv2.aruco.CharucoDetector(board)
         calibration_flags = 0
     else:
-        c_detector = None
+        calibrator = None
     
     start_read_previous = None
     all_obj_points = []
@@ -98,9 +102,9 @@ if __name__ == "__main__":
 
         detections = "None"
         if bild_nr % 10 == 0:
-            if c_detector:
+            if calibrator:
                 #charucoCorners, charucoIds, markerCorners, markerIds = board.detectBoard(I)
-                charucoCorners, charucoIds, markerCorners, markerIds = c_detector.detectBoard(I)
+                charucoCorners, charucoIds, markerCorners, markerIds = calibrator.detectBoard(I)
                 #print("{} {}".format(charucoCorners, charucoIds))
 
                 if charucoIds is not None and len(charucoIds) > 3:
@@ -133,7 +137,7 @@ if __name__ == "__main__":
             print("Calib RMSE {}\nC=\n{}\nDist={}".format(retval, cameraMatrix, distCoeffs))
 
             calibration = calibration.Calibration(cameraMatrix, distCoeffs)
-            calibration.save("calibration.json")
+            calibration.save(calibFilename)
             
             break
 

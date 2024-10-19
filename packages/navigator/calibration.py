@@ -13,10 +13,13 @@ class Calibration():
         self.dist = dist
         
     def load(self, filename):
-        with open(filename, "r") as f:
-            loaded = json.load(f)
-        self.C = numpy.asarray(loaded["camera_matrix"])
-        self.dist = numpy.asarray(loaded["distortion"])
+        try:
+            with open(filename, "r") as f:
+                loaded = json.load(f)
+            self.C = numpy.asarray(loaded["camera_matrix"])
+            self.dist = numpy.asarray(loaded["distortion"])
+        except:
+            pass
         
     def save(self, filename):
         calibration = {"camera_matrix": self.C,
