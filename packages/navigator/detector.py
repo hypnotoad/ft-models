@@ -1,7 +1,7 @@
 import cv2
 import ftrobopy
 import semantic_version
-import calibration
+from calibration import Calibration
 from datetime import datetime
     
     
@@ -65,12 +65,39 @@ class Camera:
         elif self.txt:
             jpg = self.txt.getCameraFrame()
             if jpg != None:
-                image = cv2.imdecode(np.frombuffer(bytearray(jpg)), cv2.IMREAD_COLOR)
+                image = cv2.imdecode(numpy.frombuffer(bytearray(jpg)), cv2.IMREAD_COLOR)
 
         else:
             image = cv2.imread('singlemarkersoriginal.jpg')
             
         return image
+
+def estimatePoseSingleMarkers(corners, marker_size, mtx, distortion):
+    '''
+    This will estimate the rvec and tvec for each of the marker corners detected by:
+       corners, ids, rejectedImgPoints = detector.detectMarkers(image)
+    corners - is an array of detected corners for each detected marker in the image
+    marker_size - is the size of the detected markers
+    mtx - is the camera matrix
+    distortion - is the camera distortion matrix
+    RETURN list of rvecs, tvecs, and trash (so that it corresponds to the old estimatePoseSingleMarkers())
+    '''
+    import numpy
+    
+    marker_points = numpy.array([[-marker_size / 2, marker_size / 2, 0],
+                                 [marker_size / 2, marker_size / 2, 0],
+                                 [marker_size / 2, -marker_size / 2, 0],
+                                 [-marker_size / 2, -marker_size / 2, 0]], dtype=numpy.float32)
+    trash = []
+    rvecs = []
+    tvecs = []
+    
+    for c in corners:
+        nada, R, t = cv2.solvePnP(marker_points, c, mtx, distortion, False, cv2.SOLVEPNP_IPPE_SQUARE)
+        rvecs.append(R)
+        tvecs.append(t)
+        trash.append(nada)
+    return rvecs, tvecs, trash
 
 if __name__ == "__main__":
     calibFilename = "calibration.json"
@@ -101,10 +128,11 @@ if __name__ == "__main__":
         start_det=datetime.now()
 
         detections = "None"
-        if bild_nr % 10 == 0:
-            if calibrator:
+        if calibrator:
+            if bild_nr % 10 == 0:
                 #charucoCorners, charucoIds, markerCorners, markerIds = board.detectBoard(I)
                 charucoCorners, charucoIds, markerCorners, markerIds = calibrator.detectBoard(I)
+                detections = str(markerIds)
                 #print("{} {}".format(charucoCorners, charucoIds))
 
                 if charucoIds is not None and len(charucoIds) > 3:
@@ -118,9 +146,17 @@ if __name__ == "__main__":
                     all_img_points.append(imgPoints)
                 else:
                     print("not enought points")
+        else:
+            markerCorners, markerIds, rejectedCandidates = detector.detect(I)
+
+            if len(markerCorners) > 0:
+                R, T, _ = estimatePoseSingleMarkers(markerCorners, 10, calib.cameraMatrix(), calib.distortion())
+                #print("R={}\nT={}".format(R, T))
+                detections = "T={}".format(T[0][:,0].transpose())
             else:
-                markerCorners, markerIds, rejectedCandidates = detector.detect(I)
-            detections = str(markerIds)
+                detections = str(markerIds)
+
+
 
         done = datetime.now()
 

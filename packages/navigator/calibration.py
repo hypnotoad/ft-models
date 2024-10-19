@@ -27,10 +27,10 @@ class Calibration():
         with open(filename, "w") as f:
             json.dump(calibration, f, cls=NumpyEncoder)
 
-    def getCameraMatrix(self):
+    def cameraMatrix(self):
         return self.C
 
-    def getDistortion(self):
+    def distortion(self):
         return self.dist
 
     def valid(self):
@@ -39,5 +39,5 @@ class Calibration():
 if __name__ == "__main__":
     c = Calibration()
     c.load("calibration.json")
-    print("{}\n{}\n{}".format(c.valid(), c.getCameraMatrix(), c.getDistortion()))
+    print("{}\n{}\n{}".format(c.valid(), c.cameraMatrix(), c.distortion()))
     
