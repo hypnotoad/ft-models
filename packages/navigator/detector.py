@@ -1,5 +1,6 @@
 import cv2
 import os
+import numpy
 #import ftrobopy
 import semantic_version
 from calibration import Calibration
@@ -73,32 +74,6 @@ class Camera:
             
         return image
 
-def estimatePoseSingleMarkers(corners, marker_size, mtx, distortion):
-    '''
-    This will estimate the rvec and tvec for each of the marker corners detected by:
-       corners, ids, rejectedImgPoints = detector.detectMarkers(image)
-    corners - is an array of detected corners for each detected marker in the image
-    marker_size - is the size of the detected markers
-    mtx - is the camera matrix
-    distortion - is the camera distortion matrix
-    RETURN list of rvecs, tvecs, and trash (so that it corresponds to the old estimatePoseSingleMarkers())
-    '''
-    import numpy
-    
-    marker_points = numpy.array([[-marker_size / 2, marker_size / 2, 0],
-                                 [marker_size / 2, marker_size / 2, 0],
-                                 [marker_size / 2, -marker_size / 2, 0],
-                                 [-marker_size / 2, -marker_size / 2, 0]], dtype=numpy.float32)
-    trash = []
-    rvecs = []
-    tvecs = []
-    
-    for c in corners:
-        nada, R, t = cv2.solvePnP(marker_points, c, mtx, distortion, False, cv2.SOLVEPNP_IPPE_SQUARE)
-        rvecs.append(R)
-        tvecs.append(t)
-        trash.append(nada)
-    return rvecs, tvecs, trash
 
 if __name__ == "__main__":
     calibFilename = "calibration.json"
@@ -151,7 +126,7 @@ if __name__ == "__main__":
             markerCorners, markerIds, rejectedCandidates = detector.detect(I)
 
             if len(markerCorners) > 0:
-                R, T, _ = estimatePoseSingleMarkers(markerCorners, 10, calib.cameraMatrix(), calib.distortion())
+                R, T = calib.estimatePose(markerCorners)
                 #print("R={}\nT={}".format(R, T))
                 detections = "T={}".format(T[0][:,0].transpose())
             else:

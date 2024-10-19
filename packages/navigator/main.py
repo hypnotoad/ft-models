@@ -3,6 +3,7 @@
 #
 
 import detector
+from calibration import Calibration
 
 import sys
 from TouchStyle import *
@@ -15,6 +16,8 @@ class FtcGuiApplication(TouchApplication):
 
         self.camera = detector.Camera()
         self.detector = detector.Detector()
+        self.calib = Calibration()
+        self.calib.load("calibration.json")
 
         # create the empty main window
         w = TouchWindow("Navigator")
@@ -50,6 +53,10 @@ class FtcGuiApplication(TouchApplication):
 
         if markerIds is not None:
             detected = str(markerIds)
+            if self.calib.valid():
+                R, T = self.calib.estimatePose(markerCorners)
+                import numpy
+                detected = "T=" + numpy.array_str(T[0][:,0].transpose(), precision=1)
         else:
             detected = ""
         self.detected.setText(detected)
