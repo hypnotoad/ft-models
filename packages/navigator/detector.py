@@ -1,5 +1,6 @@
 import cv2
-import ftrobopy
+import os
+#import ftrobopy
 import semantic_version
 from calibration import Calibration
 from datetime import datetime
@@ -34,7 +35,7 @@ class Camera:
 
         
         self.cvcam = cv2.VideoCapture(0)
-        if self.cvcam.get(cv2.CAP_PROP_FRAME_WIDTH) == 640:
+        if os.path.isfile("/etc/fw-ver.txt"):
             self.cvcam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
             self.cvcam.set(cv2.CAP_PROP_FPS, 1) # no impact
             self.cvcam.set(cv2.CAP_PROP_BUFFERSIZE, 3)
