@@ -127,8 +127,14 @@ if __name__ == "__main__":
 
             if len(markerCorners) > 0:
                 R, T = calib.estimatePose(markerCorners)
-                #print("R={}\nT={}".format(R, T))
-                detections = "T={}".format(T[0][:,0].transpose())
+                R_cm, _ = cv2.Rodrigues(R[0][:,0])
+                R_mc = R_cm.transpose()
+                e_z = numpy.matmul(R_mc, numpy.array([[0, 0, 1]]).transpose())
+                angles = numpy.arctan2(e_z[0:2], e_z[2]) / numpy.pi * 180
+                detections = "{} R={}, T={}".format(
+                    markerIds[0],
+                    angles.transpose(),
+                    T[0][:,0].transpose())
             else:
                 detections = str(markerIds)
 
