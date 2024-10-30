@@ -9,6 +9,7 @@ import sys
 from TouchStyle import *
 from PyQt5 import QtCore, QtGui
 import cv2
+import numpy
 
 class FtcGuiApplication(TouchApplication):
     def __init__(self, application):
@@ -28,6 +29,9 @@ class FtcGuiApplication(TouchApplication):
 
         self.detected = QLabel()
         vbox.addWidget(self.detected)
+
+        self.orientation = QLabel()
+        vbox.addWidget(self.orientation)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
@@ -51,15 +55,20 @@ class FtcGuiApplication(TouchApplication):
 
         markerCorners, markerIds, rejectedCandidates = self.detector.detect(im)
 
+        detected = ""
+        orientation = ""
         if markerIds is not None:
             detected = str(markerIds)
             if self.calib.valid():
                 R, T = self.calib.estimatePose(markerCorners)
-                import numpy
-                detected = "T=" + numpy.array_str(T[0][:,0].transpose(), precision=1)
-        else:
-            detected = ""
+                Tc = T[0]
+                angles = numpy.arctan2(Tc[0:2], Tc[2]) / numpy.pi * 180
+                
+                detected = "T=" + numpy.array_str(Tc[:,0].transpose(), precision=1)
+                orientation = "α=" + numpy.array_str(angles[:,0].transpose(), precision=1)
+
         self.detected.setText(detected)
+        self.orientation.setText(orientation)
 
         
 if __name__ == "__main__":
