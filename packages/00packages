@@ -51,7 +51,7 @@ exec: main.py
 managed: yes
 uuid: 1a598566-8137-4993-854d-3e294a8e6a60
 version: 0.9
-firmware: >=1.0.5
+firmware: >=1.1.0
 
 [plotter]
 name: Plotter
