@@ -71,7 +71,13 @@ class Camera:
 
         else:
             image = cv2.imread('singlemarkersoriginal.jpg')
-            
+
+        #RGB => x
+        #(255,0,0)     => 0
+        #(255, 255, 0) => 255
+
+        #print(image[0,0])
+        
         return image
 
 
