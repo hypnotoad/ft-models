@@ -9,7 +9,7 @@ class NumpyEncoder(json.JSONEncoder):
         return super().default(obj)
 
 class Calibration():
-    def __init__(self, C=None, dist=None, marker_size_cm = 10):
+    def __init__(self, C=None, dist=None, marker_size_cm = 15):
         self.C = C
         self.dist = dist
         self.marker_size_cm = marker_size_cm
@@ -68,6 +68,23 @@ class Calibration():
                           "T": T})
 
         return poses
+
+    def poseToPlane(self, pose, vertical_offset_cm=0):
+        # Returns a 2D pose on the plane. vertical_offset is
+        # the upwards distance from camera to the bottom of
+        # the marker.
+        #
+        # calibration defines R,T
+        e1 = numpy.array([[1, 0,  0]])
+        e2 = numpy.array([[0, 0, -1]])
+        e3 = numpy.array([[0, 1,  0]])
+        R = numpy.concatenate((e1.T, e2.T, e3.T), axis=1)
+        assert(numpy.linalg.det(R) == 1) 
+        T = numpy.array([[0, 0, -vertical_offset_cm -self.marker_size_cm/2]]).T
+        #print(pose)
+        return {"R": numpy.matmul(R, pose["R"]),
+                "T": numpy.matmul(R, pose["T"])+T}
+    
 
 
 if __name__ == "__main__":

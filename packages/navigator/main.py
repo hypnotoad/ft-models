@@ -61,11 +61,13 @@ class FtcGuiApplication(TouchApplication):
             detected = str(markerIds)
             if self.calib.valid():
                 poses = self.calib.estimatePose(markerCorners)
-                Tc = poses[0]["T"]
-                angles = numpy.arctan2(Tc[0:2], Tc[2]) / numpy.pi * 180
+                pose = self.calib.poseToPlane(poses[0])
+                #Tc = poses[0]["T"]
+                #angles = numpy.arctan2(Tc[0:2], Tc[2]) / numpy.pi * 180
                 
-                detected = "T=" + numpy.array_str(Tc[:,0].transpose(), precision=1)
-                orientation = "α=" + numpy.array_str(angles[:,0].transpose(), precision=1)
+                #detected = "T=" + numpy.array_str(Tc[:,0].transpose(), precision=1)
+                #orientation = "α=" + numpy.array_str(angles[:,0].transpose(), precision=1)
+                detected = "T=" + numpy.array_str(pose["T"][:,0].T, precision=1)
 
         self.detected.setText(detected)
         self.orientation.setText(orientation)
