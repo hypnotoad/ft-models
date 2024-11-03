@@ -60,8 +60,8 @@ class FtcGuiApplication(TouchApplication):
         if markerIds is not None:
             detected = str(markerIds)
             if self.calib.valid():
-                R, T = self.calib.estimatePose(markerCorners)
-                Tc = T[0]
+                poses = self.calib.estimatePose(markerCorners)
+                Tc = poses[0]["T"]
                 angles = numpy.arctan2(Tc[0:2], Tc[2]) / numpy.pi * 180
                 
                 detected = "T=" + numpy.array_str(Tc[:,0].transpose(), precision=1)

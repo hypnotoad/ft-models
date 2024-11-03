@@ -55,16 +55,13 @@ class Calibration():
                                      [ d, -d, 0],
                                      [-d, -d, 0]],
                                     dtype=numpy.float32)
-        rvecs = []
-        tvecs = []
-
+        poses = []
         for c in corners:
             _, R, T = cv2.solvePnP(marker_points, c, self.C, self.dist, False,
                                    cv2.SOLVEPNP_IPPE_SQUARE)
-            rvecs.append(R)
-            tvecs.append(T)
+            poses.append({"R":R, "T":T})
 
-        return rvecs, tvecs
+        return poses
 
 
 if __name__ == "__main__":

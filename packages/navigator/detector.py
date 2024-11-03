@@ -126,20 +126,20 @@ if __name__ == "__main__":
             markerCorners, markerIds, rejectedCandidates = detector.detect(I)
 
             if len(markerCorners) > 0:
-                R, T = calib.estimatePose(markerCorners)
+                poses = calib.estimatePose(markerCorners)
                 if False:
-                    R_cm, _ = cv2.Rodrigues(R[0][:,0])
+                    R_cm, _ = cv2.Rodrigues(poses[0]["R"][:,0])
                     R_mc = R_cm.transpose()
                     e_z = numpy.matmul(R_mc, numpy.array([[0, 0, 1]]).transpose())
                     angles = numpy.arctan2(e_z[0:2], e_z[2]) / numpy.pi * 180
                 else:
-                    Tc = T[0]
+                    Tc = poses[0]["T"]
                     angles = numpy.arctan2(Tc[0:2], Tc[2]) / numpy.pi * 180
                     # right/down
                 detections = "{} a={}, T={}".format(
                     markerIds[0],
                     angles.transpose(),
-                    T[0][:,0].transpose())
+                    poses[0]["T"][:,0].transpose())
             else:
                 detections = str(markerIds)
 
