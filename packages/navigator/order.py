@@ -22,7 +22,7 @@ parts = numpy.array([
 
 order = numpy.full((parts.shape[0], 1), 0)
 
-for id in range(1):
+for id in range(5):
 
     code = dictionary.drawMarker(id, size)
 
@@ -38,7 +38,7 @@ for id in range(1):
                 def try_fit(r1, r2):
                     r12 = numpy.ix_(r1, r2)
                     if numpy.all(code[r12] == color) and numpy.all(free[r12]):
-                        print("fitting {} ({},{}) to ({},{})".format(color, sy, sx, r1, r2))
+                        #print("fitting {} ({},{}) to ({},{})".format(color, sy, sx, r1, r2))
                         free[r12] = False
                         order[idx, 0] += 1
 
@@ -47,5 +47,6 @@ for id in range(1):
 
     assert(numpy.all(free == False))
 
-print(order)
+for idx in range(order.shape[0]):
+    print("% 10d  %d" % (parts[idx, 3], order[idx]))
         
