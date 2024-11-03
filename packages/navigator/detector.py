@@ -125,21 +125,30 @@ if __name__ == "__main__":
         else:
             markerCorners, markerIds, rejectedCandidates = detector.detect(I)
 
+            def poseToPlane(pose, calibration, vertical_offset_cm):
+                # Returns a 2D pose on the plane. vertical_offset is
+                # the upwards distance from camera to the bottom of
+                # the marker.
+                #
+                # calibration defines R,T
+                e1 = numpy.array([[1, 0,  0]])
+                e2 = numpy.array([[0, 0, -1]])
+                e3 = numpy.array([[0, 1,  0]])
+                R = numpy.concatenate((e1.T, e2.T, e3.T), axis=1)
+                assert(numpy.linalg.det(R) == 1) 
+                T = numpy.array([[0, 0, -vertical_offset_cm -calibration.marker_size_cm/2]]).T
+                #print(pose)
+                return {"R": numpy.matmul(R, pose["R"]),
+                        "T": numpy.matmul(R, pose["T"])+T}
+            
             if len(markerCorners) > 0:
                 poses = calib.estimatePose(markerCorners)
-                if False:
-                    R_cm, _ = cv2.Rodrigues(poses[0]["R"][:,0])
-                    R_mc = R_cm.transpose()
-                    e_z = numpy.matmul(R_mc, numpy.array([[0, 0, 1]]).transpose())
-                    angles = numpy.arctan2(e_z[0:2], e_z[2]) / numpy.pi * 180
-                else:
-                    Tc = poses[0]["T"]
-                    angles = numpy.arctan2(Tc[0:2], Tc[2]) / numpy.pi * 180
-                    # right/down
-                detections = "{} a={}, T={}".format(
+                pose = poseToPlane(poses[0], calib, 3)
+                # angles = numpy.arctan2(e_z[0:2], e_z[2]) / numpy.pi * 180
+                detections = "{} a=xx, T={}".format(
                     markerIds[0],
-                    angles.transpose(),
-                    poses[0]["T"][:,0].transpose())
+                    #angles.transpose(),
+                    pose["T"].transpose())
             else:
                 detections = str(markerIds)
 

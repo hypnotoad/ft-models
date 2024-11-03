@@ -42,11 +42,15 @@ class Calibration():
     # and corner points (u;v) of detections. The poses are metric and
     # expressed in marker coordinate systems m:
     # https://docs.opencv.org/4.x/d5/d1f/calib3d_solvePnP.html
-    # [u;v;1] = C * X_c
-    # X_c = R_mc * X_m + T_c
+    # X_c = [I, 0] * [R, T; 0^T, 1] * [X_m; 1]
+    #     = [R, T] * [X_m; 1]
+    #     = R*X_m + T
+    # Marker coordinates are defined as z=0, the center being in the middle of the marker.
     #
-    # For each marker, a separate rotation r_mc and translation T_c is
-    # returned, where r_mc is the Rodriguez representation of R_mc.
+    # [u;v;1] = C * X_c
+    #
+    # For each marker, a separate pose is returned with R and T, where
+    # R is the Rodriguez representation of the matrix R above.
     def estimatePose(self, corners):
         
         d = self.marker_size_cm/2
@@ -57,9 +61,11 @@ class Calibration():
                                     dtype=numpy.float32)
         poses = []
         for c in corners:
-            _, R, T = cv2.solvePnP(marker_points, c, self.C, self.dist, False,
-                                   cv2.SOLVEPNP_IPPE_SQUARE)
-            poses.append({"R":R, "T":T})
+            _, rvec, T = cv2.solvePnP(marker_points, c, self.C, self.dist, False,
+                                      cv2.SOLVEPNP_IPPE_SQUARE)
+            R, _ = cv2.Rodrigues(rvec)
+            poses.append({"R": R,
+                          "T": T})
 
         return poses
 
