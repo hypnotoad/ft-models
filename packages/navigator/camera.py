@@ -1,14 +1,22 @@
 import cv2
-
-# wrapper class around cv2 / ftrobopy
+import numpy
+            
+# wrapper class around cv2 / ftrobopy / static test image
 class Camera:
 
-    def __init__(self, txt=None):
-        self.txt=txt
+    def __init__(self, txt=None, testimage=None):
+        self.txt = None
+        self.cvcam = None
+        self.testimage = None
 
-        if self.txt is not None:
+        if testimage is not None:
+            self.testimage = testimage
+            
+        elif txt is not None:
             import ftrobopy
+            self.txt = txt
             self.txt.startCameraOnline()
+            
         else:
             self.cvcam = cv2.VideoCapture(0)
             
@@ -39,18 +47,38 @@ class Camera:
                     break
             image = self.cvcam.retrieve()
             status, image = self.cvcam.read()
+            return image
 
-        elif self.txt:
+        if self.txt:
 
-            while True:
+            tries=10
+            for t in range(tries):
                 jpg = self.txt.getCameraFrame()
                 if jpg is not None:
-                    image = cv2.imdecode(numpy.frombuffer(bytearray(jpg)), cv2.IMREAD_COLOR)
-                    break
+                    img = cv2.imdecode(numpy.frombuffer(bytearray(jpg)), cv2.IMREAD_COLOR)
+                    if img.size != 0:
+                        return img
+                print("Retrying {}/{}".format(t+1, tries))
 
-        else:
-            image = cv2.imread('singlemarkersoriginal.jpg')
+        if self.testimage:
+            return cv2.imread(self.testimage)
 
-        return image
+        return None
 
 
+if __name__ == "__main__":
+    import ftrobopy
+    hostname = 'txt2.lan'
+    outfilename = 'out.jpg'
+
+    while True:
+        txt = ftrobopy.ftrobopy(hostname)
+        cam = Camera(txt)
+        img = cam.getImage()
+
+        if img is not None:
+            cv2.imwrite(outfilename, img)
+            exit(0)
+    
+    
+    
