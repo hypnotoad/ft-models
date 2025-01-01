@@ -49,7 +49,7 @@ if __name__ == "__main__":
     for bild_nr in range(1000000):
         start_read = datetime.now()
         I = cam.getImage()
-        image_size = (I.shape[1], I.shape[0])
+        image_size = [I.shape[1], I.shape[0]]
         if I is None:
             print("failed to grab frame")
             continue
@@ -78,6 +78,7 @@ if __name__ == "__main__":
             markerCorners, markerIds, rejectedCandidates = detector.detect(I)
 
             if len(markerCorners) > 0:
+                calib.checkImageSize(image_size)
                 poses = calib.estimatePose(markerCorners)
                 pose = calib.poseToPlane(poses[0])
                 # angles = numpy.arctan2(e_z[0:2], e_z[2]) / numpy.pi * 180

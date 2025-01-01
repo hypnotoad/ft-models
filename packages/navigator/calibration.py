@@ -43,6 +43,12 @@ class Calibration():
     def valid(self):
         return self.C is not None and self.dist is not None
 
+    # throw an exception if we use the calibration for a wrong camera size
+    def checkImageSize(self, image_size):
+        if image_size != self.image_size:
+            raise ValueError("Calibration of size {} is used for wrong image size {}".format(
+                self.image_size, image_size))
+
     # Returns an array of poses computed from the camera calibration
     # and corner points (u;v) of detections. The poses are metric and
     # expressed in marker coordinate systems m:
