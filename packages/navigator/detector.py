@@ -104,7 +104,7 @@ if __name__ == "__main__":
             retval, cameraMatrix, distCoeffs, rvecs, tvecs = cv2.calibrateCamera(all_obj_points, all_img_points, image_size, None, None, flags = calibration_flags)
             print("Calib RMSE {}\nC=\n{}\nDist={}".format(retval, cameraMatrix, distCoeffs))
 
-            calibration = calibration.Calibration(cameraMatrix, distCoeffs)
+            calibration = calibration.Calibration(cameraMatrix, distCoeffs, image_size=image_size)
             calibration.save(calibFilename)
             
             break

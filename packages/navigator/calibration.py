@@ -9,10 +9,11 @@ class NumpyEncoder(json.JSONEncoder):
         return super().default(obj)
 
 class Calibration():
-    def __init__(self, C=None, dist=None, marker_size_cm = 15):
+    def __init__(self, C=None, dist=None, marker_size_cm = 15, image_size = [640, 480]):
         self.C = C
         self.dist = dist
         self.marker_size_cm = marker_size_cm
+        self.image_size = image_size
         
     def load(self, filename):
         try:
@@ -20,12 +21,16 @@ class Calibration():
                 loaded = json.load(f)
             self.C = numpy.asarray(loaded["camera_matrix"])
             self.dist = numpy.asarray(loaded["distortion"])
+            self.image_size = loaded["image_size"]
+            self.marker_size_cm = loaded["marker_size_cm"]
         except:
             pass
         
     def save(self, filename):
         calibration = {"camera_matrix": self.C,
-                       "distortion": self.dist}
+                       "distortion": self.dist,
+                       "image_size": self.image_size,
+                       "marker_size_cm": self.marker_size_cm}
         with open(filename, "w") as f:
             json.dump(calibration, f, cls=NumpyEncoder)
 
