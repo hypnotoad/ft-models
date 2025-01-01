@@ -15,7 +15,7 @@ class Camera:
         elif txt is not None:
             import ftrobopy
             self.txt = txt
-            self.txt.startCameraOnline()
+            self.txt.startCameraOnline(width=640, height=480, fps=20)
             
         else:
             self.cvcam = cv2.VideoCapture(0)
@@ -51,7 +51,7 @@ class Camera:
 
         if self.txt:
 
-            tries=10
+            tries=30
             for t in range(tries):
                 jpg = self.txt.getCameraFrame()
                 if jpg is not None:
@@ -63,6 +63,7 @@ class Camera:
         if self.testimage:
             return cv2.imread(self.testimage)
 
+        print("WARNING: Giving up!")
         return None
 
 
