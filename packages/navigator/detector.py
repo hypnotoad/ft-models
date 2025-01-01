@@ -29,8 +29,21 @@ class Detector:
 if __name__ == "__main__":
     from camera import Camera
     calibFilename = "calibration.json"
-    
-    cam = Camera()
+
+    if True:
+        testfilename = 'out.jpg'
+        cam = Camera(testimage=testfilename)
+        
+    if False:
+        import ftrobopy
+        hostname = 'txt2.lan'
+
+        txt = ftrobopy.ftrobopy(hostname)
+        cam = Camera(txt)
+
+    if False:
+        cam = Camera()    
+        
     detector = Detector()
     calib = Calibration()
     calib.load(calibFilename)
@@ -80,12 +93,14 @@ if __name__ == "__main__":
             if len(markerCorners) > 0:
                 calib.checkImageSize(image_size)
                 poses = calib.estimatePose(markerCorners)
-                pose = calib.poseToPlane(poses[0])
-                # angles = numpy.arctan2(e_z[0:2], e_z[2]) / numpy.pi * 180
-                detections = "{} a=xx, T={}".format(
+                camera_on_plane = calib.poseToPlane(poses[0])
+                marker_in_camera = calib.poseToCamera(poses[0])
+                # angle = numpy.arctan2(e_z[0:2], e_z[2]) / numpy.pi * 180
+
+                detections = "{} T={} X={}".format(
                     markerIds[0],
-                    #angles.transpose(),
-                    pose["T"].transpose())
+                    marker_in_camera["T"].transpose(),
+                    camera_on_plane["T"].transpose())
             else:
                 detections = str(markerIds)
 

@@ -81,11 +81,14 @@ class Calibration():
         return poses
 
     def poseToPlane(self, pose, vertical_offset_cm=0):
-        # Returns a 2D pose on the plane. vertical_offset is
-        # the upwards distance from camera to the bottom of
-        # the marker.
+        # Returns a pose on the plane defined by the marker.
         #
-        # calibration defines R,T
+        # In the resulting pose, the x axis correspond with the
+        # marker's x axis, the y axis is the plan normal and the z
+        # axis points downwards.
+        #
+        # z=0 is defined as bottom of the marker. If cam be defined
+        # lower with vertical_offset_cm.
         e1 = numpy.array([[1, 0,  0]])
         e2 = numpy.array([[0, 0, -1]])
         e3 = numpy.array([[0, 1,  0]])
@@ -96,6 +99,15 @@ class Calibration():
         return {"R": numpy.matmul(R, pose["R"]),
                 "T": numpy.matmul(R, pose["T"])+T}
     
+    def poseToCamera(self, pose):
+        # Returns the position of the marker on a plane defined by the
+        # camera.
+        #
+        # In the resulting position, x and y axes correspond with the
+        # camera's. The z axis is the optical axis.
+        Rinv = pose["R"].transpose()
+        return {"R": Rinv,
+                "T": -numpy.matmul(Rinv, pose["T"])}
 
 
 if __name__ == "__main__":
