@@ -26,6 +26,7 @@ class Detector:
     def getDictionary(self):
         return self.dictionary
 
+# to do: move the calibration part to calibration.py
 if __name__ == "__main__":
     from camera import Camera
     calibFilename = "calibration.json"
@@ -41,7 +42,7 @@ if __name__ == "__main__":
         txt = ftrobopy.ftrobopy(hostname)
         cam = Camera(txt)
 
-    if False:
+    if True:
         cam = Camera()    
         
     detector = Detector()
@@ -93,14 +94,23 @@ if __name__ == "__main__":
             if len(markerCorners) > 0:
                 calib.checkImageSize(image_size)
                 poses = calib.estimatePose(markerCorners)
-                camera_on_plane = calib.poseToPlane(poses[0])
-                marker_in_camera = calib.poseToCamera(poses[0])
-                # angle = numpy.arctan2(e_z[0:2], e_z[2]) / numpy.pi * 180
+                camera_in_marker = calib.poseToMarker(poses[0])
+                marker_in_camera = poses[0]#calib.poseToPlane(poses[0])
+                marker_angle = numpy.arctan2(poses[0]["T"][0:2], poses[0]["T"][2]) / numpy.pi * 180
 
-                detections = "{} T={} X={}".format(
+                detections = "{} C^(M)={} M^(C)={} (angles {})".format(
                     markerIds[0],
+                    camera_in_marker["T"].transpose(),
                     marker_in_camera["T"].transpose(),
-                    camera_on_plane["T"].transpose())
+                    marker_angle.transpose())
+
+                corners = numpy.round(markerCorners[0]).astype(int)
+                cv2.polylines(I, corners, True, (255, 255, 255))
+                cv2.drawFrameAxes(I, calib.cameraMatrix(), None,
+                                  marker_in_camera["R"],
+                                  marker_in_camera["T"], 15, 1);
+                cv2.imshow("image", I)
+                cv2.waitKey(10)
             else:
                 detections = str(markerIds)
 

@@ -63,8 +63,12 @@ class Calibration():
     # For each marker, a separate pose is returned with R and T, where
     # R is the Rodriguez representation of the matrix R above.
     def estimatePose(self, corners):
-        
         d = self.marker_size_cm/2
+        # The points define the coordinate system. When viewn, they
+        # correspond to TL, TR, BR, BL. So when viewn _from_ the
+        # direction of the pattern, the world coordinate system's
+        # origin is in the center of the pattern with x facing to the
+        # left, y facing upwards and z facing away.
         marker_points = numpy.array([[-d,  d, 0],
                                      [ d,  d, 0],
                                      [ d, -d, 0],
@@ -99,15 +103,16 @@ class Calibration():
         return {"R": numpy.matmul(R, pose["R"]),
                 "T": numpy.matmul(R, pose["T"])+T}
     
-    def poseToCamera(self, pose):
+    def poseToMarker(self, pose):
         # Returns the position of the marker on a plane defined by the
         # camera.
         #
         # In the resulting position, x and y axes correspond with the
-        # camera's. The z axis is the optical axis.
+        # camera's starting in the middle of the image. The z axis is
+        # the optical axis. (cf. https://docs.opencv.org/4.7.0/d9/d0c/group__calib3d.html)
         Rinv = pose["R"].transpose()
         return {"R": Rinv,
-                "T": -numpy.matmul(Rinv, pose["T"])}
+                "T": numpy.matmul(Rinv, -pose["T"])}
 
 
 if __name__ == "__main__":

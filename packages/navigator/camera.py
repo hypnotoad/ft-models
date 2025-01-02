@@ -18,15 +18,17 @@ class Camera:
             self.txt.startCameraOnline(width=640, height=480, fps=20)
             
         else:
-            self.cvcam = cv2.VideoCapture(0)
+            self.cvcam = cv2.VideoCapture(2)
+            import os
             
             if os.path.isfile("/etc/fw-ver.txt"):
                 self.cvcam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
                 self.cvcam.set(cv2.CAP_PROP_FPS, 1) # no impact
                 self.cvcam.set(cv2.CAP_PROP_BUFFERSIZE, 3)
-                if False:
-                    self.cvcam.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-                    self.cvcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+
+            if True:
+                self.cvcam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                self.cvcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
             print("Resolution is %d x %d" % (self.cvcam.get(cv2.CAP_PROP_FRAME_WIDTH),
                                              self.cvcam.get(cv2.CAP_PROP_FRAME_HEIGHT)))
@@ -37,6 +39,7 @@ class Camera:
         
         if self.cvcam:
             while True:
+                from datetime import datetime
                 t1 = datetime.now()
                 status = self.cvcam.grab()
                 t2 = datetime.now()
