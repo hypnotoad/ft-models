@@ -43,7 +43,7 @@ if __name__ == "__main__":
         cam = Camera(txt)
 
     if True:
-        cam = Camera()    
+        cam = Camera(video_idx=0)    
         
     detector = Detector()
     calib = Calibration()
@@ -94,23 +94,29 @@ if __name__ == "__main__":
             if len(markerCorners) > 0:
                 calib.checkImageSize(image_size)
                 poses = calib.estimatePose(markerCorners)
-                camera_in_marker = calib.poseToMarker(poses[0])
-                marker_in_camera = poses[0]#calib.poseToPlane(poses[0])
-                marker_angle = numpy.arctan2(poses[0]["T"][0:2], poses[0]["T"][2]) / numpy.pi * 180
+                marker_in_camera = poses[0]
+                camera_in_marker = calib.poseToMarker(marker_in_camera)
+                angle_dist = calib.poseToAngleDist(marker_in_camera)
 
-                detections = "{} C^(M)={} M^(C)={} (angles {})".format(
+                detections = "{} M^(C)={} (C^(M)={} )".format(
                     markerIds[0],
-                    camera_in_marker["T"].transpose(),
                     marker_in_camera["T"].transpose(),
-                    marker_angle.transpose())
+                    camera_in_marker["T"].transpose() )
+                detections = "{}  h: {}° v: {}° d: {}cm".format(
+                    markerIds[0],
+                    angle_dist["hori_angle"],
+                    angle_dist["vert_angle"],
+                    angle_dist["dist_cm"]
+                )
 
-                corners = numpy.round(markerCorners[0]).astype(int)
-                cv2.polylines(I, corners, True, (255, 255, 255))
-                cv2.drawFrameAxes(I, calib.cameraMatrix(), None,
-                                  marker_in_camera["R"],
-                                  marker_in_camera["T"], 15, 1);
-                cv2.imshow("image", I)
-                cv2.waitKey(10)
+                if False:
+                    corners = numpy.round(markerCorners[0]).astype(int)
+                    cv2.polylines(I, corners, True, (255, 255, 255))
+                    cv2.drawFrameAxes(I, calib.cameraMatrix(), None,
+                                      marker_in_camera["R"],
+                                      marker_in_camera["T"], 15, 1);
+                    cv2.imshow("image", I)
+                    cv2.waitKey(10)
             else:
                 detections = str(markerIds)
 
