@@ -13,7 +13,7 @@ class FtcGuiApplication(TouchApplication):
     def __init__(self, args):
         TouchApplication.__init__(self, args)
 
-        w = TouchWindow("FT Server")
+        w = TouchWindow("ROBO Server")
         print("initializing")
         
         vbox = QVBoxLayout()
