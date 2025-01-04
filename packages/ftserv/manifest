@@ -1,0 +1,12 @@
+[app]
+name: ROBO Pro Server
+category: System
+author: Ralf Dragon
+icon: icon.png
+desc: Start and stop the original ROBO Pro daemon
+url: https://github.com/hypnotoad/ft-models.git
+exec: ftserv.py
+managed: yes
+uuid: 0e8351eb-bfdc-4a41-afcf-4a37cd63d964
+version: 1.0
+firmware: >=1.0.0
