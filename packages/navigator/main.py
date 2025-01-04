@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 
-import detector
+from camera import Camera
+from detector import Detector
 from calibration import Calibration
 
 import sys
@@ -15,11 +16,13 @@ class FtcGuiApplication(TouchApplication):
     def __init__(self, application):
         TouchApplication.__init__(self, application)
 
-        self.camera = detector.Camera()
-        self.detector = detector.Detector()
+        self.camera = Camera()
+        self.detector = Detector()
         self.calib = Calibration()
         self.calib.load(os.path.dirname(__file__) + "/calibration.json")
 
+        self.linethickness = 3
+        
         # create the empty main window
         w = TouchWindow("Navigator")
         vbox = QVBoxLayout()
@@ -44,30 +47,36 @@ class FtcGuiApplication(TouchApplication):
 
     def update(self):
         im = self.camera.getImage()
-        f = 220/im.shape[1]
-        
-        # make sure image persists in memory as Qt will not copy it
-        self.im = cv2.resize(im, dsize=None, fx=f, fy=f)
-        qim = QImage(self.im.data, self.im.shape[1], self.im.shape[0], self.im.strides[0],
-                     QImage.Format_BGR888)
-        pix = QtGui.QPixmap.fromImage(qim)
-        self.image.setPixmap(pix)
-
         markerCorners, markerIds, rejectedCandidates = self.detector.detect(im)
+
+
 
         detected = ""
         orientation = ""
         if markerIds is not None:
             detected = str(markerIds)
+            for corners in markerCorners:
+                cv2.polylines(im, numpy.round(corners).astype(int), isClosed=True,
+                              color=(255, 255, 255), thickness=self.linethickness)
+                    
             if self.calib.valid():
                 poses = self.calib.estimatePose(markerCorners)
-                pose = self.calib.poseToPlane(poses[0])
-                #Tc = poses[0]["T"]
-                #angles = numpy.arctan2(Tc[0:2], Tc[2]) / numpy.pi * 180
+
+                for pose in poses:
+                    cv2.drawFrameAxes(im, self.calib.cameraMatrix(), None,
+                                      pose["R"], pose["T"], length=15, thickness=self.linethickness);
                 
-                #detected = "T=" + numpy.array_str(Tc[:,0].transpose(), precision=1)
-                #orientation = "α=" + numpy.array_str(angles[:,0].transpose(), precision=1)
-                detected = "T=" + numpy.array_str(pose["T"][:,0].T, precision=1)
+                    angle_dist = self.calib.poseToAngleDist(pose)
+                    orientation = "{:.1f}cm, {:.1f}".format(angle_dist["dist_cm"],
+                                                            angle_dist["hori_angle"])
+
+        # visualize make sure image persists in memory as Qt will not copy it
+        f = 220/im.shape[1]
+        self.im = cv2.resize(im, dsize=None, fx=f, fy=f)
+        qim = QImage(self.im.data, self.im.shape[1], self.im.shape[0], self.im.strides[0],
+                     QImage.Format_BGR888)
+        pix = QtGui.QPixmap.fromImage(qim)
+        self.image.setPixmap(pix)
 
         self.detected.setText(detected)
         self.orientation.setText(orientation)

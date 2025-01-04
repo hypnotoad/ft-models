@@ -115,7 +115,7 @@ class Calibration():
                 "T": numpy.matmul(Rinv, -pose["T"])}
 
     def poseToAngleDist(self, pose):
-        T = pose["T"]
+        T = pose["T"][:,0]
         return {"hori_angle": numpy.arctan2(T[0], T[2]) / numpy.pi * 180,
                 "vert_angle": numpy.arctan2(T[1], T[2]) / numpy.pi * 180,
                 "dist_cm": numpy.linalg.norm(T)}
