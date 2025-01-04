@@ -1,9 +1,9 @@
 [app]
-name: ROBO Pro Server
+name: ROBO Server
 category: System
 author: Ralf Dragon
 icon: icon.png
-desc: Start and stop the original ROBO Pro daemon
+desc: Start and stop the original ROBO Pro daemon in the background
 url: https://github.com/hypnotoad/ft-models.git
 exec: ftserv.py
 managed: yes
