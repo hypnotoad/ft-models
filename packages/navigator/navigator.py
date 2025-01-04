@@ -3,8 +3,10 @@
 import os
 import ftrobopy
 import numpy
+import time
 
-from detector import Camera, Detector
+from camera import Camera
+from detector import Detector
 from calibration import Calibration
 
 calib = Calibration()
@@ -22,6 +24,22 @@ motions = numpy.array([[ 1,  1,  1,  1 ],
                        [ 1, -1, -1,  1 ],
                        [ 1, -1,  1, -1 ]])
 
+def set_motors(dist):
+    assert(dist.shape[0] == 1)
+    txt.SyncDataBegin()
+    for i in range(len(motors)):
+        x = 300
+        s = max(-512, min(512, int(x*dist[0][i])))
+        motors[i].setSpeed(s)
+    txt.SyncDataEnd()
+
+def add_component(measurement, target, threshold, index):
+    retval = numpy.array([[0, 0,  0]])
+    offset = target - measurement
+    if abs(offset) > threshold:
+        retval[0][index] = 1 if offset < 0 else -1
+    return retval
+
 while True:
 
     im = camera.getImage()
@@ -29,25 +47,26 @@ while True:
 
     detected = ""
     orientation = ""
+    move = numpy.array([[0, 0, 0]]) #fwd, right, turn
     if markerIds is not None:
         poses = calib.estimatePose(markerCorners)
-        pose = calib.poseToPlane(poses[0])
-        print(pose["T"])
+        angle_dist = calib.poseToAngleDist(poses[0])
+        detections = "{}  h: {}° v: {}° d: {}cm".format(
+            markerIds[0],
+            angle_dist["hori_angle"],
+            angle_dist["vert_angle"],
+            angle_dist["dist_cm"]
+        )
+        print(detections)
 
-        if pose["T"][0] > 0:
-            print("right")
-            move=numpy.array([[0, 1, 0]])
-        else:
-            print("left")
-            move=numpy.array([[0, -1, 0]])
+        move += add_component(angle_dist["hori_angle"], target=0, threshold=3, index=2)
+        move += add_component(angle_dist["dist_cm"], target=100, threshold=5, index=0)
 
-        dist = move.dot(motions)
-    else:
-        dist = numpy.array([[0, 0, 0, 0]])
-        
-    txt.SyncDataBegin()
-    for i in range(len(motors)):
-        x = 400
-        s = min(512, int(x*dist[0][i]))
-        motors[i].setSpeed(s)
-    txt.SyncDataEnd()
+    print(move)
+
+    dist = move.dot(motions)
+    set_motors(dist)
+    time.sleep(0.2)
+    set_motors(numpy.array([[0, 0, 0, 0]]))
+
+    # not let's calibrate the moto speeds

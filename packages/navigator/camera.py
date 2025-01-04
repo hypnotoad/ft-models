@@ -4,7 +4,7 @@ import numpy
 # wrapper class around cv2 / ftrobopy / static test image
 class Camera:
 
-    def __init__(self, txt=None, testimage=None):
+    def __init__(self, txt=None, testimage=None, video_idx=0):
         self.txt = None
         self.cvcam = None
         self.testimage = None
@@ -18,7 +18,7 @@ class Camera:
             self.txt.startCameraOnline(width=640, height=480, fps=20)
             
         else:
-            self.cvcam = cv2.VideoCapture(2)
+            self.cvcam = cv2.VideoCapture(video_idx)
             import os
             
             if os.path.isfile("/etc/fw-ver.txt"):
