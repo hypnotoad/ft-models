@@ -67,7 +67,7 @@ class FtcGuiApplication(TouchApplication):
                                       pose["R"], pose["T"], length=15, thickness=self.linethickness);
                 
                     angle_dist = self.calib.poseToAngleDist(pose)
-                    orientation = "{:.1f}cm, {:.1f}".format(angle_dist["dist_cm"],
+                    orientation = u"{:.1f}cm, {:.1f}\N{DEGREE SIGN}".format(angle_dist["dist_cm"],
                                                             angle_dist["hori_angle"])
 
         # visualize make sure image persists in memory as Qt will not copy it
