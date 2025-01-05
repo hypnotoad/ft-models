@@ -1,4 +1,4 @@
-../navigator.zip: main.py detector.py aruco.png manifest calibration.json calibration.py
+../navigator.zip: main.py detector.py aruco.png manifest calibration.json calibration.py navigator.py odometry_temp.py
 	zip -u -r $@ $^ 
 
 clean:
