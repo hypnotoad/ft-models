@@ -41,7 +41,7 @@ while True:
 
     if angle_dist is not None:
         dist, duration = odo.compute_speeds_and_duration(angle_dist)
-        print("{} for {}s".format(dist, duration))
+        print("{} for {:.1f}s".format(dist, duration))
 
         odo.set_motors(dist)
         time.sleep(duration)
